@@ -1,0 +1,240 @@
+<aside class="main-sidebar">
+    <div class="logo-container">
+        @if (settings().logoUrl; as logo) {
+        <img [src]="logo" [alt]="'ALT.COMPANY_LOGO' | translate" class="company-logo">
+        } @else {
+        <!-- Normalmente las marcas no se traducen; deja el nombre comercial -->
+        <span class="logo-text">FacturaPRO</span>
+        }
+    </div>
+
+    <nav class="sidebar-nav">
+        <div class="nav-group">
+            <h3 class="nav-group-title">{{ 'SECTIONS.WORKSPACE' | translate }}</h3>
+
+            <a routerLink="/app/dashboard" routerLinkActive="active" [routerLinkActiveOptions]="{exact: true}"
+                class="nav-link">
+                <lucide-icon [img]="DashboardIcon" size="20"></lucide-icon>
+                <span>{{ 'NAV.DASHBOARD' | translate }}</span>
+            </a>
+
+            <a routerLink="/app/my-work" routerLinkActive="active" class="nav-link">
+                <lucide-icon [img]="MyWorkIcon" size="20"></lucide-icon>
+                <span>{{ 'NAV.MY_WORK' | translate }}</span>
+            </a>
+
+            <a routerLink="/app/approvals" routerLinkActive="active" class="nav-link">
+                <lucide-icon [img]="ApprovalsIcon" size="20"></lucide-icon>
+                <span>{{ 'NAV.APPROVALS' | translate }}</span>
+            </a>
+
+            <a routerLink="/app/notifications" routerLinkActive="active" class="nav-link">
+                <lucide-icon [img]="BellIcon" size="20"></lucide-icon>
+                <span>{{ 'NAV.NOTIFICATIONS' | translate }}</span>
+            </a>
+
+            <a routerLink="/app/documents/repository" routerLinkActive="active" class="nav-link">
+                <lucide-icon [img]="DocumentsIcon" size="20"></lucide-icon>
+                <span>{{ 'DOCS.DOCUMENTS' | translate }}</span>
+            </a>
+        </div>
+
+        <div class="nav-group">
+            <h3 class="nav-group-title">{{ 'SECTIONS.MASTER_DATA' | translate }}</h3>
+
+            <a routerLink="/app/masters/customers" routerLinkActive="active" class="nav-link">
+                <lucide-icon [img]="ContactsIcon" size="20"></lucide-icon>
+                <span>{{ 'NAV.CUSTOMERS' | translate }}</span>
+            </a>
+
+            <a routerLink="/app/masters/products" routerLinkActive="active" class="nav-link">
+                <lucide-icon [img]="PackageIcon" size="20"></lucide-icon>
+                <span>{{ 'NAV.PRODUCTS' | translate }}</span>
+            </a>
+
+            <a routerLink="/app/masters/price-lists" routerLinkActive="active" class="nav-link">
+                <lucide-icon [img]="MastersIcon" size="20"></lucide-icon>
+                <span>{{ 'NAV.PRICE_LISTS' | translate }}</span>
+            </a>
+        </div>
+
+        <div class="nav-group">
+            <h3 class="nav-group-title">{{ 'SECTIONS.OPERATIONS' | translate }}</h3>
+
+            <a routerLink="/app/sales" routerLinkActive="active" class="nav-link">
+                <lucide-icon [img]="SalesIcon" size="20"></lucide-icon>
+                <span>{{ 'NAV.SALES' | translate }}</span>
+            </a>
+
+            <a routerLink="/app/invoices" routerLinkActive="active" class="nav-link">
+                <lucide-icon [img]="InvoicesIcon" size="20"></lucide-icon>
+                <span>{{ 'NAV.INVOICES' | translate }}</span>
+            </a>
+
+            <a routerLink="/app/inventory" routerLinkActive="active" class="nav-link">
+                <lucide-icon [img]="InventoryIcon" size="20"></lucide-icon>
+                <span>{{ 'NAV.INVENTORY' | translate }}</span>
+            </a>
+            <a routerLink="/app/purchasing" routerLinkActive="active" class="nav-link">
+                <lucide-icon [img]="PurchasingIcon" size="20"></lucide-icon>
+                <span>{{ 'NAV.PURCHASING' | translate }}</span>
+            </a>
+        </div>
+
+        <div class="nav-group">
+            <h3 class="nav-group-title">{{ 'SECTIONS.ACCOUNTING' | translate }}</h3>
+
+            <a routerLink="/app/accounting/chart-of-accounts" routerLinkActive="active" class="nav-link">
+                <lucide-icon [img]="AccountingIcon" size="20"></lucide-icon>
+                <span>{{ 'ACCOUNTING.CHART_OF_ACCOUNTS' | translate }}</span>
+            </a>
+        </div>
+
+        <div class="nav-group">
+            <h3 class="nav-group-title">{{ 'SECTIONS.REPORTS' | translate }}</h3>
+
+            <a routerLink="/app/reports" routerLinkActive="active" class="nav-link">
+                <lucide-icon [img]="ReportsIcon" size="20"></lucide-icon>
+                <span>{{ 'NAV.REPORTS' | translate }}</span>
+            </a>
+        </div>
+
+        <div class="nav-group">
+            <h3 class="nav-group-title">{{ 'SECTIONS.TOOLS' | translate }}</h3>
+
+            <a routerLink="/app/data-imports" routerLinkActive="active" class="nav-link">
+                <lucide-icon [img]="DataImportsIcon" size="20"></lucide-icon>
+                <span>{{ 'TOOLS.DATA_IMPORTS' | translate }}</span>
+            </a>
+
+            <a routerLink="/app/data-exports" routerLinkActive="active" class="nav-link">
+                <lucide-icon [img]="DataExportsIcon" size="20"></lucide-icon>
+                <span>{{ 'TOOLS.DATA_EXPORTS' | translate }}</span>
+            </a>
+        </div>
+
+        <div class="nav-group">
+            <h3 class="nav-group-title">{{ 'SECTIONS.MANAGEMENT' | translate }}</h3>
+
+            <a routerLink="/app/contacts" routerLinkActive="active" class="nav-link">
+                <lucide-icon [img]="ContactsIcon" size="20"></lucide-icon>
+                <span>{{ 'NAV.CONTACTS' | translate }}</span>
+            </a>
+        </div>
+    </nav>
+
+    <div class="sidebar-footer">
+        <a routerLink="/app/settings" routerLinkActive="active" class="nav-link">
+            <lucide-icon [img]="SettingsIcon" size="20"></lucide-icon>
+            <span>{{ 'NAV.SETTINGS' | translate }}</span>
+        </a>
+    </div>
+</aside>
+
+<header class="main-topbar">
+    <div class="topbar-left">
+        <div class="logo">
+            @if (settings().logoUrl; as logo) {
+            <img [src]="logo" [alt]="'ALT.COMPANY_LOGO' | translate" class="company-logo">
+            } @else {
+            <span class="logo-text">FacturaPRO</span>
+            }
+        </div>
+
+        <nav class="topbar-nav">
+            <a routerLink="/app/dashboard" routerLinkActive="active" [routerLinkActiveOptions]="{exact: true}"
+                class="nav-link">
+                {{ 'NAV.DASHBOARD' | translate }}
+            </a>
+            <a routerLink="/app/sales" routerLinkActive="active" class="nav-link">
+                {{ 'NAV.SALES' | translate }}
+            </a>
+            <a routerLink="/app/invoices" routerLinkActive="active" class="nav-link">
+                {{ 'NAV.INVOICES' | translate }}
+            </a>
+            <a routerLink="/app/inventory" routerLinkActive="active" class="nav-link">
+                {{ 'NAV.INVENTORY' | translate }}
+            </a>
+            <a routerLink="/app/contacts" routerLinkActive="active" class="nav-link">
+                {{ 'NAV.CONTACTS' | translate }}
+            </a>
+            <a routerLink="/app/settings" routerLinkActive="active" class="nav-link">
+                {{ 'NAV.SETTINGS' | translate }}
+            </a>
+        </nav>
+    </div>
+
+    <div class="topbar-content">
+        <div class="header-center">
+            <div class="global-search">
+                <lucide-icon [img]="SearchIcon" size="18"></lucide-icon>
+                <input type="text" [placeholder]="'SEARCH.MAIN_PLACEHOLDER' | translate" #searchInput
+                    (keyup.enter)="navigateToSearch(searchInput.value)"
+                    [attr.aria-label]="'SEARCH.ARIA_GLOBAL' | translate">
+            </div>
+        </div>
+
+        <div class="header-right">
+            <div class="actions-group">
+                <button class="icon-button" [title]="'ACTIONS.CREATE_NEW' | translate">
+                    <lucide-icon [img]="PlusCircleIcon" size="20"></lucide-icon>
+                </button>
+
+                <button class="icon-button" [title]="'NAV.NOTIFICATIONS' | translate">
+                    <lucide-icon [img]="BellIcon" size="20"></lucide-icon>
+                    <span class="notification-badge">3</span>
+                </button>
+
+                <app-theme-toggle />
+            </div>
+
+            <div class="separator"></div>
+
+            <div class="user-menu">
+                <button class="user-menu-trigger" (click)="toggleUserMenu()" [attr.aria-expanded]="isUserMenuOpen()">
+                    <div class="avatar"><lucide-icon [img]="UserIcon" size="20"></lucide-icon></div>
+                    <div class="user-info">
+                        <span class="user-name">{{ authService.currentUser()?.firstName }} {{
+                            authService.currentUser()?.lastName }}</span>
+                        <span class="user-role">{{ 'USER.ROLE.ADMINISTRATOR' | translate }}</span>
+                    </div>
+                    <lucide-icon [img]="ChevronDownIcon" size="16" class="chevron"
+                        [class.rotated]="isUserMenuOpen()"></lucide-icon>
+                </button>
+
+                @if (isUserMenuOpen()) {
+                <div class="user-menu-dropdown">
+                    <div class="dropdown-header">
+                        <span class="user-name">{{ authService.currentUser()?.firstName }} {{
+                            authService.currentUser()?.lastName }}</span>
+                        <span class="user-email">{{ authService.currentUser()?.email }}</span>
+                    </div>
+
+                    <div class="dropdown-body">
+                        <a routerLink="/app/settings/profile" class="dropdown-item" (click)="closeUserMenu()">
+                            <lucide-icon [img]="UserIcon" size="16"></lucide-icon>
+                            <span>{{ 'USER.MY_PROFILE' | translate }}</span>
+                        </a>
+
+                        <a routerLink="/app/settings" class="dropdown-item" (click)="closeUserMenu()">
+                            <lucide-icon [img]="SettingsIcon" size="16"></lucide-icon>
+                            <span>{{ 'NAV.SETTINGS' | translate }}</span>
+                        </a>
+                    </div>
+
+                    <div class="dropdown-footer">
+                        <button class="dropdown-item logout-item" (click)="authService.logout()">
+                            <lucide-icon [img]="LogOutIcon" size="16"></lucide-icon>
+                            <span>{{ 'AUTH.SIGN_OUT' | translate }}</span>
+                        </button>
+                    </div>
+                </div>
+                }
+            </div>
+        </div>
+    </div>
+</header>
+
+<main class="main-content">
+    <router-outlet></router-outlet>
+</main>

@@ -1,0 +1,55 @@
+@use '../../../../assets/styles/view-styles' as views;
+@import '../../masters/suppliers/supplier-list/supplier-list.page.scss';
+
+.ledger-header {
+    @include views.card;
+    padding: 1.5rem;
+    margin-bottom: 1.5rem;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+
+    h4 {
+        font-size: 1.25rem;
+        color: var(--text-secondary);
+
+        .account-name {
+            color: var(--text-primary);
+            font-weight: 600;
+        }
+    }
+}
+
+.balance-summary {
+    display: flex;
+    gap: 2rem;
+    text-align: right;
+}
+
+.balance-item {
+    display: flex;
+    flex-direction: column;
+
+    span {
+        font-size: 0.9rem;
+        color: var(--text-secondary);
+    }
+
+    strong {
+        font-size: 1.25rem;
+        font-weight: 700;
+        color: var(--text-primary);
+    }
+}
+
+.ledger-table {
+    .amount-cell {
+        font-family: 'Source Code Pro', monospace;
+    }
+
+    .balance-cell {
+        font-family: 'Source Code Pro', monospace;
+        font-weight: 600;
+        color: var(--text-primary);
+    }
+}

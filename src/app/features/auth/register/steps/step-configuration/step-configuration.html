@@ -1,0 +1,71 @@
+<div class="step-container" [formGroup]="parentForm">
+    <div class="step-header">
+        <h3>Localización y Fiscal</h3>
+        <p>Información clave para tus facturas y cumplimiento de normativas.</p>
+    </div>
+    <div class="form-field"><label for="address">Dirección de la Empresa (Opcional)</label>
+        <div class="input-wrapper"><lucide-icon [img]="AddressIcon" size="18" class="input-icon"></lucide-icon><input
+                id="address" formControlName="address"></div>
+    </div>
+    <div class="form-row three-cols">
+        <div class="form-field"><label for="city">Ciudad (Opcional)</label>
+            <div class="input-wrapper"><input id="city" formControlName="city"></div>
+        </div>
+        <div class="form-field"><label for="stateOrProvince">Estado / Provincia (Opcional)</label>
+            <div class="input-wrapper"><input id="stateOrProvince" formControlName="stateOrProvince"></div>
+        </div>
+        <div class="form-field"><label for="postalCode">Cód. Postal (Opcional)</label>
+            <div class="input-wrapper"><input id="postalCode" formControlName="postalCode"></div>
+        </div>
+    </div>
+    <div class="form-row">
+        <div class="form-field"><label for="country">País / Región*</label>
+            <div class="input-wrapper"><lucide-icon [img]="CountryIcon" size="18"
+                    class="input-icon"></lucide-icon><select id="country" formControlName="country">
+                    <option value="DO">República Dominicana</option>
+                </select></div>
+        </div>
+        <div class="form-field"><label for="companyPhone">Teléfono de la Empresa*</label>
+            <div class="input-wrapper"><lucide-icon [img]="PhoneIcon" size="18" class="input-icon"></lucide-icon><input
+                    id="companyPhone" type="tel" formControlName="companyPhone"></div>
+        </div>
+    </div>
+    <div class="separator"></div>
+    <div class="form-row">
+        <div class="form-field"><label for="taxId">ID Fiscal (RNC, CUIT, etc.)*</label>
+            <div class="input-wrapper"><lucide-icon [img]="TaxIdIcon" size="18" class="input-icon"></lucide-icon><input
+                    id="taxId" formControlName="taxId"></div>
+        </div>
+        <div class="form-field"><label for="naicsCode">Código de Actividad (Opcional)</label>
+            <div class="input-wrapper"><lucide-icon [img]="CodeIcon" size="18" class="input-icon"></lucide-icon><input
+                    id="naicsCode" formControlName="naicsCode"></div>
+        </div>
+    </div>
+    <div class="form-row">
+        <div class="form-field"><label for="currency">Divisa Principal*</label>
+            <div class="input-wrapper"><lucide-icon [img]="CurrencyIcon" size="18"
+                    class="input-icon"></lucide-icon><select id="currency" formControlName="currency">
+                    <option value="DOP">DOP</option>
+                    <option value="USD">USD</option>
+                </select></div>
+        </div>
+        <div class="form-field"><label for="defaultTaxRate">Impuesto por Defecto (%)</label>
+            <div class="input-wrapper"><lucide-icon [img]="PercentIcon" size="18"
+                    class="input-icon"></lucide-icon><input id="defaultTaxRate" type="number"
+                    formControlName="defaultTaxRate"></div>
+        </div>
+    </div>
+    <div class="form-row">
+        <div class="form-field"><label for="fiscalYearStart">Inicio Año Fiscal (Opcional)</label>
+            <div class="input-wrapper"><lucide-icon [img]="CalendarIcon" size="18"
+                    class="input-icon"></lucide-icon><input id="fiscalYearStart" formControlName="fiscalYearStart"
+                    placeholder="MM-DD"></div>
+        </div>
+        <div class="form-field"><label for="timezone">Zona Horaria*</label>
+            <div class="input-wrapper"><lucide-icon [img]="TimezoneIcon" size="18"
+                    class="input-icon"></lucide-icon><select id="timezone" formControlName="timezone">
+                    <option value="America/Santo_Domingo">GMT-4 (Sto. Dgo.)</option>
+                </select></div>
+        </div>
+    </div>
+</div>

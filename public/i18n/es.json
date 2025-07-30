@@ -1,0 +1,263 @@
+{
+  "SETTINGS": {
+    "TITLE": "Configuración",
+    "DESCRIPTION": "Administra los detalles de tu cuenta, empresa y usuarios.",
+    "BRANDING": {
+      "TITLE": "Personalización Avanzada",
+      "DESCRIPTION": "Completa la información para personalizar la apariencia de tu aplicación.",
+      "SAVE_BUTTON": "Guardar Cambios"
+    }
+  },
+  "SECTIONS": {
+    "WORKSPACE": "Espacio de Trabajo",
+    "MASTER_DATA": "Datos Maestros",
+    "OPERATIONS": "Operaciones",
+    "ACCOUNTING": "Contabilidad",
+    "REPORTS": "Reportes",
+    "TOOLS": "Herramientas",
+    "MANAGEMENT": "Gestión"
+  },
+  "NAV": {
+    "DASHBOARD": "Dashboard",
+    "MY_WORK": "Mi Trabajo",
+    "APPROVALS": "Aprobaciones",
+    "NOTIFICATIONS": "Notificaciones",
+    "CONTACTS": "Contactos",
+    "SETTINGS": "Configuración",
+    "SALES": "Ventas",
+    "INVOICES": "Facturas",
+    "INVENTORY": "Inventario",
+    "PURCHASING": "Compras",
+    "REPORTS": "Reportes",
+    "CUSTOMERS": "Clientes",
+    "PRODUCTS": "Productos",
+    "PRICE_LISTS": "Listas de Precios"
+  },
+  "DOCS": {
+    "DOCUMENTS": "Documentos"
+  },
+  "TOOLS": {
+    "DATA_IMPORTS": "Importaciones de Datos",
+    "DATA_EXPORTS": "Exportaciones de Datos"
+  },
+  "ACCOUNTING": {
+    "CHART_OF_ACCOUNTS": "Plan de Cuentas",
+    "LEDGER": {
+      "TITLE": "Libro Mayor",
+      "DESCRIPTION": "Administra tu plan de cuentas, asientos contables y períodos contables."
+    },
+    "GENERAL_LEDGER": "Libro Mayor",
+    "JOURNAL_ENTRIES": "Asientos Contables",
+    "GENERAL_JOURNAL": "Libro Diario",
+    "SUBSIDIARY_LEDGERS": "Libros Auxiliares",
+    "VARIANCE_ANALYSIS": "Análisis de Variaciones",
+    "PERIODS": "Períodos",
+    "PERIOD_CLOSE": "Cierre Contable",
+    "RECONCILIATION": "Conciliación",
+    "COA": {
+      "TITLE": "Plan de Cuentas",
+      "ACTIONS": {
+        "FILTERS": "Filtros",
+        "NEW_ACCOUNT": "Nueva Cuenta"
+      },
+      "TABLE": {
+        "HEADERS": {
+          "CODE": "Código",
+          "ACCOUNT_NAME": "Nombre de la Cuenta",
+          "TYPE": "Tipo",
+          "BALANCE": "Saldo",
+          "ACTIONS": "Acciones"
+        }
+      },
+      "ARIA": {
+        "EXPAND_ROW": "Expandir cuenta",
+        "COLLAPSE_ROW": "Contraer cuenta",
+        "MORE_ACTIONS": "Más acciones"
+      }
+    }
+  },
+  "USER": {
+    "MY_PROFILE": "Mi Perfil",
+    "ROLE": {
+      "ADMINISTRATOR": "Administrador"
+    }
+  },
+  "AUTH": {
+    "SIGN_OUT": "Cerrar Sesión"
+  },
+  "ACTIONS": {
+    "CREATE_NEW": "Crear Nuevo"
+  },
+  "ALT": {
+    "COMPANY_LOGO": "Logo de la empresa"
+  },
+  "SEARCH": {
+    "MAIN_PLACEHOLDER": "Buscar facturas, clientes, productos…",
+    "ARIA_GLOBAL": "Búsqueda global"
+  },
+  "CHARTS": {
+    "COMMON": {
+      "CHART_TYPE": "Tipo de Gráfico"
+    },
+    "TYPE": {
+      "BAR": "Barras",
+      "LINE": "Línea"
+    },
+    "CASHFLOW": {
+      "TITLE": "Flujo de Efectivo del Período",
+      "CONSOLIDATED_TITLE": "Flujo de Efectivo Consolidado",
+      "SERIES_NAME": "Flujo de Efectivo",
+      "Y_AXIS_TITLE": "Monto ({{currency}})",
+      "X": {
+        "OPENING_BALANCE": "Saldo Inicial",
+        "OPERATING_INCOME": "Ingresos Operativos",
+        "COST_OF_GOODS_SOLD": "Costo de Ventas",
+        "OPERATING_EXPENSES": "Gastos Operativos",
+        "INVESTMENTS": "Inversiones",
+        "ENDING_BALANCE": "Saldo Final"
+      }
+    },
+    "TOP_PRODUCTS": {
+      "Y_AXIS_TITLE": "Unidades Vendidas",
+      "SERIES_NAME": "Unidades"
+    },
+    "MENU": {
+      "TITLE": "Exportar",
+      "DOWNLOAD": "Descargar",
+      "FULL_SCREEN": "Ver en Pantalla Completa",
+      "PRINT": "Imprimir",
+      "PNG": "Descargar PNG",
+      "JPEG": "Descargar JPEG",
+      "PDF": "Descargar PDF",
+      "SVG": "Descargar SVG",
+      "CSV": "Descargar CSV",
+      "XLS": "Descargar Excel"
+    }
+  },
+  "DASH": {
+    "HEADER": {
+      "SUBTITLE": "Un resumen de la actividad de tu negocio. Arrastra y ajusta los widgets a tu gusto.",
+      "ADD_WIDGET": "Añadir Widget",
+      "RESTORE": "Restaurar",
+      "EDIT_DONE": "Finalizar Edición",
+      "EDIT_LAYOUT": "Editar Layout"
+    },
+    "ACTIONS": {
+      "REMOVE_WIDGET": "Eliminar Widget"
+    },
+    "ADD_PANEL": {
+      "TITLE": "Librería de Widgets",
+      "DESCRIPTION": "Añade nuevos widgets a tu dashboard.",
+      "ADD": "Añadir",
+      "EMPTY": "¡Todos los widgets ya están en tu dashboard!"
+    },
+    "WIDGET": {
+      "SALES_TODAY": {
+        "NAME": "Ventas de Hoy",
+        "TITLE": "Ventas de Hoy"
+      },
+      "PENDING_INVOICES": {
+        "NAME": "Facturas Pendientes",
+        "TITLE": "Facturas Pendientes"
+      },
+      "LOW_STOCK_ITEMS": {
+        "NAME": "Productos con Bajo Stock",
+        "TITLE": "Productos con Bajo Stock"
+      },
+      "ACTIVE_CLIENTS": {
+        "NAME": "Clientes Activos",
+        "TITLE": "Clientes Activos"
+      },
+      "EBITDA": {
+        "NAME": "KPI: EBITDA",
+        "TITLE": "EBITDA",
+        "COMP_PERIOD": "vs Presupuesto"
+      },
+      "NET_MARGIN": {
+        "NAME": "KPI: Margen Neto",
+        "TITLE": "Margen Neto",
+        "COMP_PERIOD": "vs Año Anterior"
+      },
+      "CASH_FLOW_KPI": {
+        "NAME": "KPI: Flujo de Caja Libre",
+        "TITLE": "Flujo de Caja Libre",
+        "COMP_PERIOD": "vs Presupuesto"
+      },
+      "DEBT_EQUITY": {
+        "NAME": "KPI: Endeudamiento",
+        "TITLE": "Endeudamiento (D/E)",
+        "COMP_PERIOD": "vs Q2"
+      },
+      "FINANCIAL_RATIOS": {
+        "NAME": "KPIs: Ratios Financieros"
+      },
+      "KPI_ROE": {
+        "NAME": "KPI: ROE",
+        "TITLE": "ROE (Retorno sobre Patrimonio)",
+        "COMP_PERIOD": "vs Año Anterior"
+      },
+      "KPI_ROA": {
+        "NAME": "KPI: ROA",
+        "TITLE": "ROA (Retorno sobre Activos)",
+        "COMP_PERIOD": "vs Año Anterior"
+      },
+      "KPI_CURRENT_RATIO": {
+        "NAME": "KPI: Liquidez Corriente",
+        "TITLE": "Liquidez Corriente",
+        "COMP_PERIOD": "vs Mes Anterior"
+      },
+      "KPI_QUICK_RATIO": {
+        "NAME": "KPI: Prueba Ácida",
+        "TITLE": "Prueba Ácida",
+        "COMP_PERIOD": "vs Mes Anterior"
+      },
+      "KPI_WORKING_CAPITAL": {
+        "NAME": "KPI: Capital de Trabajo",
+        "TITLE": "Capital de Trabajo",
+        "COMP_PERIOD": "Actual"
+      },
+      "REAL_VS_BUDGET": {
+        "NAME": "Real vs Presupuesto"
+      },
+      "CASHFLOW_WATERFALL": {
+        "NAME": "Flujo de Efectivo (Waterfall)"
+      },
+      "EXPENSES_PIE": {
+        "NAME": "Desglose de Gastos"
+      },
+      "AR_AGING_BAR": {
+        "NAME": "Antigüedad de Cuentas por Cobrar"
+      },
+      "SALES_CHART": {
+        "NAME": "Gráfico de Ingresos"
+      },
+      "INVOICE_STATUS": {
+        "NAME": "Estado de Facturas"
+      },
+      "TOP_PRODUCTS": {
+        "NAME": "Productos Más Vendidos"
+      },
+      "ALERTS": {
+        "NAME": "Panel de Alertas"
+      },
+      "LOW_STOCK_TABLE": {
+        "NAME": "Tabla de Bajo Stock"
+      },
+      "RECENT_ACTIVITY": {
+        "NAME": "Actividad Reciente"
+      }
+    }
+  },
+  "PURCHASING": {
+    "ORDERS": {
+      "TITLE": "Órdenes de Compra",
+      "DESCRIPTION": "Crea, rastrea y gestiona todas tus órdenes de compra a proveedores.",
+      "NEW_ORDER": "Nueva Orden"
+    },
+    "REQUISITIONS": {
+      "TITLE": "Requisiciones de Compra",
+      "DESCRIPTION": "Revisa, aprueba y da seguimiento a todas las solicitudes de compra internas.",
+      "NEW_REQUISITION": "Nueva Requisición"
+    }
+  }
+}

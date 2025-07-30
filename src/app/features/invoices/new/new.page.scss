@@ -1,0 +1,135 @@
+@use '../../../../assets/styles/variables' as *;
+@use '../../../../assets/styles/forms' as mixins;
+@import '../../sales/history/history.page.scss'; // Reutilizamos muchos estilos base
+
+.invoice-form-grid {
+    display: grid;
+    grid-template-columns: 2fr 1fr;
+    gap: 1.5rem;
+
+    @media (max-width: 992px) {
+        grid-template-columns: 1fr;
+    }
+}
+
+.form-main-column {
+    display: flex;
+    flex-direction: column;
+    gap: 2rem;
+}
+
+.form-side-column {
+    display: flex;
+    flex-direction: column;
+    gap: 1.5rem;
+}
+
+.form-field {
+    @include mixins.form-field;
+
+    input,
+    textarea {
+        @include mixins.input-wrapper;
+        padding-left: 1rem;
+    }
+}
+
+.form-section {
+    display: flex;
+    flex-direction: column;
+    gap: 1.5rem;
+}
+
+.invoice-meta {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 1.5rem;
+}
+
+.line-items-table {
+    width: 100%;
+    border-collapse: collapse;
+
+    th {
+        text-align: left;
+        padding-bottom: 0.5rem;
+        font-size: 0.8rem;
+        color: var(--text-secondary);
+    }
+
+    td {
+        padding: 0.5rem 0;
+    }
+
+    input[type="text"] {
+        width: 100%;
+    }
+
+    input[type="number"] {
+        width: 80px;
+        text-align: right;
+    }
+
+    .desc-col {
+        width: 50%;
+    }
+
+    .qty-col,
+    .price-col {
+        width: 15%;
+    }
+
+    .total-col {
+        width: 15%;
+        text-align: right;
+    }
+
+    .actions-col {
+        width: 5%;
+    }
+
+    .text-right {
+        font-weight: 600;
+        padding-right: 0.5rem;
+    }
+}
+
+.add-line-btn {
+    margin-top: 1rem;
+    border-style: dashed;
+}
+
+.summary-card {
+    h3 {
+        font-size: 1.1rem;
+        margin-bottom: 1.5rem;
+    }
+
+    .summary-row,
+    .summary-total {
+        display: flex;
+        justify-content: space-between;
+        margin-bottom: 1rem;
+        color: var(--text-secondary);
+    }
+
+    .summary-total {
+        font-size: 1.25rem;
+        font-weight: 600;
+        color: var(--text-primary);
+        border-top: 1px solid var(--border-color);
+        padding-top: 1rem;
+    }
+}
+
+.notes-card {
+    h3 {
+        font-size: 1.1rem;
+        margin-bottom: 1rem;
+    }
+
+    textarea {
+        height: 120px;
+        resize: vertical;
+    }
+}

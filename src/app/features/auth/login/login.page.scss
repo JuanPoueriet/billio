@@ -1,0 +1,69 @@
+@use '../../../../assets/styles/forms' as mixins;
+
+:host {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    min-height: 100vh;
+    background-color: var(--bg-solid);
+    padding: 1rem;
+}
+
+.auth-container {
+    width: 100%;
+    max-width: 420px;
+}
+
+.auth-card {
+    @include mixins.auth-card;
+}
+
+.auth-header {
+    @include mixins.auth-header;
+}
+
+.auth-form {
+    display: flex;
+    flex-direction: column;
+    gap: 1.25rem;
+}
+
+.form-field {
+    @include mixins.form-field;
+}
+
+.input-wrapper {
+    @include mixins.input-wrapper;
+}
+
+.error-message {
+    @include mixins.error-message;
+
+    &.global-error {
+        @include mixins.global-error;
+    }
+}
+
+.submit-button {
+    @include mixins.submit-button;
+    margin-top: 0.5rem;
+}
+
+.auth-footer {
+    @include mixins.auth-footer;
+}
+
+.spinner {
+    width: 18px;
+    height: 18px;
+    border: 2px solid rgba(255, 255, 255, 0.3);
+    border-top-color: var(--accent-text);
+    border-radius: 50%;
+    animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+    to {
+        transform: rotate(360deg);
+    }
+}

@@ -1,0 +1,62 @@
+<div class="view-container">
+    <div class="view-header">
+        <div class="header-content">
+            <h1>Productos de Inventario</h1>
+            <p>Administra, edita y monitorea todo tu catálogo de productos.</p>
+        </div>
+        <div class="header-actions">
+            <button class="secondary-button"><lucide-icon [img]="FilterIcon"
+                    size="16"></lucide-icon><span>Filtros</span></button>
+            <button class="secondary-button"><lucide-icon [img]="FileDownIcon"
+                    size="16"></lucide-icon><span>Exportar</span></button>
+            <a routerLink="/app/inventory/products/new" class="primary-button"><lucide-icon [img]="PlusCircleIcon"
+                    size="16"></lucide-icon><span>Añadir Producto</span></a>
+        </div>
+    </div>
+    <div class="table-container card">
+        <table class="data-table">
+            <thead>
+                <tr>
+                    <th style="width: 1%;"><input type="checkbox"></th>
+                    <th>Producto</th>
+                    <th>SKU</th>
+                    <th>Categoría</th>
+                    <th class="text-right">Precio</th>
+                    <th class="text-center">Stock</th>
+                    <th class="actions-column"></th>
+                </tr>
+            </thead>
+            <tbody>
+                @for (product of products(); track product.id) {
+                <tr>
+                    <td><input type="checkbox"></td>
+                    <td>
+                        <div class="product-cell">
+                            <img [src]="product.imageUrl" [alt]="product.name" class="product-image">
+                            <a routerLink="/app/inventory/products/{{product.id}}/edit"
+                                class="table-link product-name">{{ product.name }}</a>
+                        </div>
+                    </td>
+                    <td>{{ product.sku }}</td>
+                    <td>{{ product.category }}</td>
+                    <td class="text-right">{{ product.price | number:'1.2-2' }}</td>
+                    <td class="text-center">
+                        <div class="stock-indicator" [ngClass]="getStockStatusClass(product.status)">
+                            <span>{{ product.stock }}</span>
+                            <span class="status-text">{{ product.status }}</span>
+                        </div>
+                    </td>
+                    <td class="actions-column">
+                        <button class="icon-button"><lucide-icon [img]="MoreHorizontalIcon"
+                                size="18"></lucide-icon></button>
+                    </td>
+                </tr>
+                } @empty {
+                <tr>
+                    <td colspan="7" class="empty-state">No tienes productos en tu inventario. ¡Añade el primero!</td>
+                </tr>
+                }
+            </tbody>
+        </table>
+    </div>
+</div>

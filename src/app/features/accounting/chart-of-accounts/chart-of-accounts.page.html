@@ -1,0 +1,117 @@
+<div class="subview-container">
+  <div class="subview-header">
+    <h3>{{ 'ACCOUNTING.COA.TITLE' | translate }}</h3>
+
+    <div class="header-actions">
+      <button class="secondary-button" [attr.aria-label]="'ACCOUNTING.COA.ACTIONS.FILTERS' | translate">
+        <lucide-icon [img]="FilterIcon" size="16"></lucide-icon>
+        <span>{{ 'ACCOUNTING.COA.ACTIONS.FILTERS' | translate }}</span>
+      </button>
+
+      <a routerLink="new" class="primary-button">
+        <lucide-icon [img]="PlusCircleIcon" size="16"></lucide-icon>
+        <span>{{ 'ACCOUNTING.COA.ACTIONS.NEW_ACCOUNT' | translate }}</span>
+      </a>
+    </div>
+  </div>
+
+  <div class="table-container card">
+    <table class="data-table tree-table">
+      <thead>
+        <tr>
+          <th>{{ 'ACCOUNTING.COA.TABLE.HEADERS.CODE' | translate }}</th>
+          <th>{{ 'ACCOUNTING.COA.TABLE.HEADERS.ACCOUNT_NAME' | translate }}</th>
+          <th>{{ 'ACCOUNTING.COA.TABLE.HEADERS.TYPE' | translate }}</th>
+          <th class="text-right">{{ 'ACCOUNTING.COA.TABLE.HEADERS.BALANCE' | translate }}</th>
+          <th class="actions-column">{{ 'ACCOUNTING.COA.TABLE.HEADERS.ACTIONS' | translate }}</th>
+        </tr>
+      </thead>
+
+      <tbody>
+        @for(account of accounts(); track account.id) {
+          <tr class="account-row" [class.is-parent]="account.isParent">
+            <td>{{ account.code }}</td>
+            <td>
+              <div class="name-cell" [style.padding-left.rem]="account.level * 1.5">
+                @if(account.isParent) {
+                  <button
+                    class="expand-button icon-button"
+                    (click)="toggleExpand(account)"
+                    [attr.aria-label]="account.isExpanded
+                      ? ('ACCOUNTING.COA.ARIA.COLLAPSE_ROW' | translate)
+                      : ('ACCOUNTING.COA.ARIA.EXPAND_ROW' | translate)">
+                    <lucide-icon
+                      [img]="account.isExpanded ? ChevronDownIcon : ChevronRightIcon"
+                      size="16">
+                    </lucide-icon>
+                  </button>
+                }
+                <a href="#" class="table-link">{{ account.name }}</a>
+              </div>
+            </td>
+            <td>{{ account.type }}</td>
+            <td class="text-right">{{ account.balance | number:'1.2-2' }}</td>
+            <td class="actions-column">
+              <button class="icon-button" [attr.aria-label]="'ACCOUNTING.COA.ARIA.MORE_ACTIONS' | translate">
+                <lucide-icon [img]="MoreHorizontalIcon" size="18"></lucide-icon>
+              </button>
+            </td>
+          </tr>
+
+          @if(account.isExpanded && account.children) {
+            @for(child of account.children; track child.id) {
+              <tr class="account-row" [class.is-parent]="child.isParent">
+                <td>{{ child.code }}</td>
+                <td>
+                  <div class="name-cell" [style.padding-left.rem]="child.level * 1.5">
+                    @if(child.isParent) {
+                      <button
+                        class="expand-button icon-button"
+                        (click)="toggleExpand(child)"
+                        [attr.aria-label]="child.isExpanded
+                          ? ('ACCOUNTING.COA.ARIA.COLLAPSE_ROW' | translate)
+                          : ('ACCOUNTING.COA.ARIA.EXPAND_ROW' | translate)">
+                        <lucide-icon
+                          [img]="child.isExpanded ? ChevronDownIcon : ChevronRightIcon"
+                          size="16">
+                        </lucide-icon>
+                      </button>
+                    }
+                    <a href="#" class="table-link">{{ child.name }}</a>
+                  </div>
+                </td>
+                <td>{{ child.type }}</td>
+                <td class="text-right">{{ child.balance | number:'1.2-2' }}</td>
+                <td class="actions-column">
+                  <button class="icon-button" [attr.aria-label]="'ACCOUNTING.COA.ARIA.MORE_ACTIONS' | translate">
+                    <lucide-icon [img]="MoreHorizontalIcon" size="18"></lucide-icon>
+                  </button>
+                </td>
+              </tr>
+
+              @if(child.isExpanded && child.children) {
+                @for(grandchild of child.children; track grandchild.id) {
+                  <tr class="account-row">
+                    <td>{{ grandchild.code }}</td>
+                    <td>
+                      <div class="name-cell" [style.padding-left.rem]="grandchild.level * 1.5">
+                        <a href="#" class="table-link">{{ grandchild.name }}</a>
+                      </div>
+                    </td>
+                    <td>{{ grandchild.type }}</td>
+                    <td class="text-right">{{ grandchild.balance | number:'1.2-2' }}</td>
+                    <td class="actions-column">
+                      <button class="icon-button" [attr.aria-label]="'ACCOUNTING.COA.ARIA.MORE_ACTIONS' | translate">
+                        <lucide-icon [img]="MoreHorizontalIcon" size="18"></lucide-icon>
+                      </button>
+                    </td>
+                  </tr>
+                }
+              }
+            }
+          }
+        }
+      </tbody>
+    </table>
+  </div>
+</div>

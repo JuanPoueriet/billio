@@ -1,0 +1,27 @@
+@use '../../../../assets/styles/view-styles' as views;
+@use '../../../../assets/styles/forms' as mixins;
+
+:host { display: block; }
+.view-container { @include views.view-container; }
+.view-header { @include views.view-header; }
+.header-actions { @include views.header-actions; }
+
+.form-container {
+  @include views.card;
+  padding: 2.5rem;
+  max-width: 900px;
+  margin: auto;
+}
+
+.form-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 1.5rem 2rem;
+}
+
+.form-field {
+  @include mixins.form-field;
+  &.full-width {
+    grid-column: 1 / -1;
+  }
+}

@@ -1,0 +1,53 @@
+@use '../../../../assets/styles/variables' as *;
+@use '../../../../assets/styles/forms' as mixins;
+@import '../../sales/history/history.page.scss'; // Reutilizamos la base de estilos de tablas
+
+// Estilos específicos para esta vista
+.product-cell {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+}
+
+.product-image {
+    width: 40px;
+    height: 40px;
+    object-fit: cover;
+    border-radius: $border-radius;
+    background-color: var(--bg-solid);
+}
+
+.product-name {
+    font-weight: 600;
+    color: var(--text-primary);
+}
+
+.stock-indicator {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+
+    span {
+        font-size: 1rem;
+        font-weight: 600;
+        color: var(--text-primary);
+    }
+
+    .status-text {
+        font-size: 0.75rem;
+        font-weight: 600;
+    }
+
+    &.stock-in .status-text {
+        color: #4ade80;
+    }
+
+    &.stock-low .status-text {
+        color: #fb923c;
+    }
+
+    &.stock-out .status-text {
+        color: #f87171;
+    }
+}

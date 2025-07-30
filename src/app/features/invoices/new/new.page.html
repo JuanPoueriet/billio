@@ -1,0 +1,89 @@
+<div class="view-container">
+    <form [formGroup]="invoiceForm" (ngSubmit)="saveInvoice()">
+        <div class="view-header">
+            <div class="header-content">
+                <h1>Nueva Factura</h1>
+                <p>Completa los detalles para crear y enviar una nueva factura.</p>
+            </div>
+            <div class="header-actions">
+                <a routerLink="/app/invoices" class="secondary-button">Cancelar</a>
+                <button type="submit" class="primary-button">
+                    <lucide-icon [img]="SaveIcon" size="16"></lucide-icon>
+                    <span>Guardar Factura</span>
+                </button>
+            </div>
+        </div>
+
+        <div class="invoice-form-grid">
+            <div class="form-main-column card">
+                <div class="form-section customer-details">
+                    <div class="form-field"><label for="customerName">Cliente*</label><input id="customerName"
+                            formControlName="customerName"></div>
+                </div>
+                <div class="form-section invoice-meta">
+                    <div class="form-field"><label for="invoiceNumber">Factura #</label><input id="invoiceNumber"
+                            formControlName="invoiceNumber"></div>
+                    <div class="form-field"><label for="issueDate">Fecha de Emisión*</label><input type="date"
+                            id="issueDate" formControlName="issueDate"></div>
+                    <div class="form-field"><label for="dueDate">Fecha de Vencimiento*</label><input type="date"
+                            id="dueDate" formControlName="dueDate"></div>
+                </div>
+
+                <div class="line-items-section">
+                    <table class="line-items-table" formArrayName="lineItems">
+                        <thead>
+                            <tr>
+                                <th class="desc-col">Descripción</th>
+                                <th class="qty-col">Cant.</th>
+                                <th class="price-col">Precio</th>
+                                <th class="total-col">Total</th>
+                                <th class="actions-col"></th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @for (item of lineItems.controls; track $index) {
+                            <tr [formGroupName]="$index">
+                                <td><input type="text" formControlName="description"
+                                        placeholder="Nombre del producto o servicio"></td>
+                                <td><input type="number" formControlName="quantity"></td>
+                                <td><input type="number" formControlName="price"></td>
+                                <td class="text-right">{{ getLineItemTotal($index) | number:'1.2-2' }}</td>
+                                <td><button type="button" class="icon-button"
+                                        (click)="removeLineItem($index)"><lucide-icon [img]="TrashIcon"
+                                            size="16"></lucide-icon></button></td>
+                            </tr>
+                            }
+                        </tbody>
+                    </table>
+                    <button type="button" class="secondary-button add-line-btn" (click)="addLineItem()">
+                        <lucide-icon [img]="PlusIcon" size="16"></lucide-icon>
+                        <span>Añadir Línea</span>
+                    </button>
+                </div>
+            </div>
+
+            <div class="form-side-column">
+                <div class="summary-card card">
+                    <h3>Resumen</h3>
+                    <div class="summary-row">
+                        <span>Subtotal</span>
+                        <span>{{ subtotal() | number:'1.2-2' }}</span>
+                    </div>
+                    <div class="summary-row">
+                        <span>Impuestos (18%)</span>
+                        <span>{{ taxAmount() | number:'1.2-2' }}</span>
+                    </div>
+                    <div class="summary-total">
+                        <span>Total</span>
+                        <span>${{ total() | number:'1.2-2' }}</span>
+                    </div>
+                </div>
+                <div class="notes-card card">
+                    <h3>Notas</h3>
+                    <textarea formControlName="notes" rows="4"
+                        placeholder="Añade notas adicionales, términos o información bancaria..."></textarea>
+                </div>
+            </div>
+        </div>
+    </form>
+</div>
