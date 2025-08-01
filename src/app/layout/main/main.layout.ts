@@ -18,11 +18,12 @@ import {
   Truck
 } from 'lucide-angular';
 import { TranslateModule } from '@ngx-translate/core';
+import { Sidebar } from '../sidebar/sidebar';
 
 @Component({
   selector: 'app-main-layout',
   standalone: true,
-  imports: [CommonModule, RouterOutlet, RouterLink, RouterLinkActive, ThemeToggle, LucideAngularModule,TranslateModule],
+  imports: [CommonModule, RouterOutlet, RouterLink, RouterLinkActive, ThemeToggle, LucideAngularModule,TranslateModule,Sidebar],
   templateUrl: './main.layout.html',
   styleUrls: ['./main.layout.scss'],
 })

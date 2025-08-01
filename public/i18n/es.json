@@ -259,5 +259,107 @@
       "DESCRIPTION": "Revisa, aprueba y da seguimiento a todas las solicitudes de compra internas.",
       "NEW_REQUISITION": "Nueva Requisición"
     }
+  },
+  "sidebar": {
+    "groups": {
+      "general": "General",
+      "finance": "Finanzas",
+      "operations": "Operaciones",
+      "master_data": "Datos Maestros",
+      "reports": "Reportes y Analítica",
+      "configuration": "Configuración"
+    },
+    "general": {
+      "dashboard": "Panel de Control",
+      "my_work": "Mis Tareas",
+      "notifications": "Notificaciones",
+      "search": "Búsqueda Global"
+    },
+    "finance": {
+      "gl": "Contabilidad General",
+      "gl_sub": {
+        "journal": "Asientos Contables",
+        "coa": "Plan de Cuentas",
+        "periods": "Gestión de Períodos",
+        "closing": "Proceso de Cierre",
+        "reconciliation": "Conciliación Contable"
+      },
+      "treasury": "Tesorería y Bancos",
+      "treasury_sub": {
+        "dashboard": "Panel de Liquidez",
+        "accounts": "Cuentas Bancarias",
+        "reconciliation": "Conciliación Bancaria",
+        "cash_flow": "Proyección de Flujo de Caja",
+        "payments": "Lotes de Pago"
+      },
+      "ar": "Cuentas por Cobrar",
+      "ar_sub": {
+        "dashboard": "Panel de Cobranza",
+        "invoices": "Facturas de Venta",
+        "receipts": "Recibos y Cobros",
+        "statements": "Estados de Cuenta"
+      },
+      "ap": "Cuentas por Pagar",
+      "ap_sub": {
+        "dashboard": "Panel de Pagos",
+        "invoices": "Facturas de Proveedor",
+        "payments": "Pagos"
+      },
+      "fixed_assets": "Activos Fijos",
+      "fa_sub": {
+        "list": "Maestro de Activos",
+        "depreciation": "Proceso de Depreciación"
+      }
+    },
+    "operations": {
+      "sales": "Ventas (O2C)",
+      "sales_sub": {
+        "quotes": "Cotizaciones",
+        "orders": "Pedidos de Venta",
+        "contracts": "Contratos"
+      },
+      "purchasing": "Compras (P2P)",
+      "purchasing_sub": {
+        "requisitions": "Solicitudes de Compra",
+        "orders": "Órdenes de Compra",
+        "matching": "Conciliación de Facturas"
+      },
+      "inventory": "Inventario y Almacén",
+      "inventory_sub": {
+        "dashboard": "Panel de Inventario",
+        "stock": "Niveles de Stock",
+        "movements": "Historial de Movimientos",
+        "adjustments": "Ajustes y Conteos"
+      },
+      "manufacturing": "Producción",
+      "manufacturing_sub": {
+        "orders": "Órdenes de Producción",
+        "mrp": "Planificación (MRP)",
+        "costing": "Costeo de Producción"
+      }
+    },
+    "master_data": {
+      "customers": "Clientes",
+      "suppliers": "Proveedores",
+      "products": "Productos y Servicios"
+    },
+    "reports": {
+      "reporting": "Reportería",
+      "reporting_sub": {
+        "financial": "Estados Financieros",
+        "sales": "Reportes de Venta",
+        "audit": "Pistas de Auditoría"
+      },
+      "bi": "Inteligencia de Negocio",
+      "bi_sub": {
+        "dashboards": "Paneles Analíticos",
+        "kpis": "Indicadores (KPIs)"
+      }
+    },
+    "configuration": {
+      "system": "Configuración del Sistema",
+      "security": "Usuarios y Seguridad",
+      "integrations": "Integraciones y API"
+    }
   }
 }

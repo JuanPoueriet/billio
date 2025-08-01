@@ -8,127 +8,14 @@
         }
     </div>
 
-    <nav class="sidebar-nav">
-        <div class="nav-group">
-            <h3 class="nav-group-title">{{ 'SECTIONS.WORKSPACE' | translate }}</h3>
+    <app-sidebar />
 
-            <a routerLink="/app/dashboard" routerLinkActive="active" [routerLinkActiveOptions]="{exact: true}"
-                class="nav-link">
-                <lucide-icon [img]="DashboardIcon" size="20"></lucide-icon>
-                <span>{{ 'NAV.DASHBOARD' | translate }}</span>
-            </a>
-
-            <a routerLink="/app/my-work" routerLinkActive="active" class="nav-link">
-                <lucide-icon [img]="MyWorkIcon" size="20"></lucide-icon>
-                <span>{{ 'NAV.MY_WORK' | translate }}</span>
-            </a>
-
-            <a routerLink="/app/approvals" routerLinkActive="active" class="nav-link">
-                <lucide-icon [img]="ApprovalsIcon" size="20"></lucide-icon>
-                <span>{{ 'NAV.APPROVALS' | translate }}</span>
-            </a>
-
-            <a routerLink="/app/notifications" routerLinkActive="active" class="nav-link">
-                <lucide-icon [img]="BellIcon" size="20"></lucide-icon>
-                <span>{{ 'NAV.NOTIFICATIONS' | translate }}</span>
-            </a>
-
-            <a routerLink="/app/documents/repository" routerLinkActive="active" class="nav-link">
-                <lucide-icon [img]="DocumentsIcon" size="20"></lucide-icon>
-                <span>{{ 'DOCS.DOCUMENTS' | translate }}</span>
-            </a>
-        </div>
-
-        <div class="nav-group">
-            <h3 class="nav-group-title">{{ 'SECTIONS.MASTER_DATA' | translate }}</h3>
-
-            <a routerLink="/app/masters/customers" routerLinkActive="active" class="nav-link">
-                <lucide-icon [img]="ContactsIcon" size="20"></lucide-icon>
-                <span>{{ 'NAV.CUSTOMERS' | translate }}</span>
-            </a>
-
-            <a routerLink="/app/masters/products" routerLinkActive="active" class="nav-link">
-                <lucide-icon [img]="PackageIcon" size="20"></lucide-icon>
-                <span>{{ 'NAV.PRODUCTS' | translate }}</span>
-            </a>
-
-            <a routerLink="/app/masters/price-lists" routerLinkActive="active" class="nav-link">
-                <lucide-icon [img]="MastersIcon" size="20"></lucide-icon>
-                <span>{{ 'NAV.PRICE_LISTS' | translate }}</span>
-            </a>
-        </div>
-
-        <div class="nav-group">
-            <h3 class="nav-group-title">{{ 'SECTIONS.OPERATIONS' | translate }}</h3>
-
-            <a routerLink="/app/sales" routerLinkActive="active" class="nav-link">
-                <lucide-icon [img]="SalesIcon" size="20"></lucide-icon>
-                <span>{{ 'NAV.SALES' | translate }}</span>
-            </a>
-
-            <a routerLink="/app/invoices" routerLinkActive="active" class="nav-link">
-                <lucide-icon [img]="InvoicesIcon" size="20"></lucide-icon>
-                <span>{{ 'NAV.INVOICES' | translate }}</span>
-            </a>
-
-            <a routerLink="/app/inventory" routerLinkActive="active" class="nav-link">
-                <lucide-icon [img]="InventoryIcon" size="20"></lucide-icon>
-                <span>{{ 'NAV.INVENTORY' | translate }}</span>
-            </a>
-            <a routerLink="/app/purchasing" routerLinkActive="active" class="nav-link">
-                <lucide-icon [img]="PurchasingIcon" size="20"></lucide-icon>
-                <span>{{ 'NAV.PURCHASING' | translate }}</span>
-            </a>
-        </div>
-
-        <div class="nav-group">
-            <h3 class="nav-group-title">{{ 'SECTIONS.ACCOUNTING' | translate }}</h3>
-
-            <a routerLink="/app/accounting/chart-of-accounts" routerLinkActive="active" class="nav-link">
-                <lucide-icon [img]="AccountingIcon" size="20"></lucide-icon>
-                <span>{{ 'ACCOUNTING.CHART_OF_ACCOUNTS' | translate }}</span>
-            </a>
-        </div>
-
-        <div class="nav-group">
-            <h3 class="nav-group-title">{{ 'SECTIONS.REPORTS' | translate }}</h3>
-
-            <a routerLink="/app/reports" routerLinkActive="active" class="nav-link">
-                <lucide-icon [img]="ReportsIcon" size="20"></lucide-icon>
-                <span>{{ 'NAV.REPORTS' | translate }}</span>
-            </a>
-        </div>
-
-        <div class="nav-group">
-            <h3 class="nav-group-title">{{ 'SECTIONS.TOOLS' | translate }}</h3>
-
-            <a routerLink="/app/data-imports" routerLinkActive="active" class="nav-link">
-                <lucide-icon [img]="DataImportsIcon" size="20"></lucide-icon>
-                <span>{{ 'TOOLS.DATA_IMPORTS' | translate }}</span>
-            </a>
-
-            <a routerLink="/app/data-exports" routerLinkActive="active" class="nav-link">
-                <lucide-icon [img]="DataExportsIcon" size="20"></lucide-icon>
-                <span>{{ 'TOOLS.DATA_EXPORTS' | translate }}</span>
-            </a>
-        </div>
-
-        <div class="nav-group">
-            <h3 class="nav-group-title">{{ 'SECTIONS.MANAGEMENT' | translate }}</h3>
-
-            <a routerLink="/app/contacts" routerLinkActive="active" class="nav-link">
-                <lucide-icon [img]="ContactsIcon" size="20"></lucide-icon>
-                <span>{{ 'NAV.CONTACTS' | translate }}</span>
-            </a>
-        </div>
-    </nav>
-
-    <div class="sidebar-footer">
+    <!-- <div class="sidebar-footer">
         <a routerLink="/app/settings" routerLinkActive="active" class="nav-link">
             <lucide-icon [img]="SettingsIcon" size="20"></lucide-icon>
             <span>{{ 'NAV.SETTINGS' | translate }}</span>
         </a>
-    </div>
+    </div> -->
 </aside>
 
 <header class="main-topbar">

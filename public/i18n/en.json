@@ -259,5 +259,107 @@
       "DESCRIPTION": "Review, approve, and track all internal purchase requests.",
       "NEW_REQUISITION": "New Requisition"
     }
+  },
+  "sidebar": {
+    "groups": {
+      "general": "General",
+      "finance": "Finance",
+      "operations": "Operations",
+      "master_data": "Master Data",
+      "reports": "Reports & Analytics",
+      "configuration": "Configuration"
+    },
+    "general": {
+      "dashboard": "Dashboard",
+      "my_work": "My Work",
+      "notifications": "Notifications",
+      "search": "Global Search"
+    },
+    "finance": {
+      "gl": "General Ledger",
+      "gl_sub": {
+        "journal": "Journal Entries",
+        "coa": "Chart of Accounts",
+        "periods": "Period Management",
+        "closing": "Closing Process",
+        "reconciliation": "GL Reconciliation"
+      },
+      "treasury": "Treasury & Banks",
+      "treasury_sub": {
+        "dashboard": "Liquidity Dashboard",
+        "accounts": "Bank Accounts",
+        "reconciliation": "Bank Reconciliation",
+        "cash_flow": "Cash Flow Forecast",
+        "payments": "Payment Batches"
+      },
+      "ar": "Accounts Receivable",
+      "ar_sub": {
+        "dashboard": "AR Dashboard",
+        "invoices": "Sales Invoices",
+        "receipts": "Receipts & Collections",
+        "statements": "Customer Statements"
+      },
+      "ap": "Accounts Payable",
+      "ap_sub": {
+        "dashboard": "AP Dashboard",
+        "invoices": "Supplier Invoices",
+        "payments": "Payments"
+      },
+      "fixed_assets": "Fixed Assets",
+      "fa_sub": {
+        "list": "Asset Master",
+        "depreciation": "Depreciation Run"
+      }
+    },
+    "operations": {
+      "sales": "Sales (O2C)",
+      "sales_sub": {
+        "quotes": "Quotes",
+        "orders": "Sales Orders",
+        "contracts": "Contracts"
+      },
+      "purchasing": "Purchasing (P2P)",
+      "purchasing_sub": {
+        "requisitions": "Requisitions",
+        "orders": "Purchase Orders",
+        "matching": "Invoice Matching"
+      },
+      "inventory": "Inventory & WMS",
+      "inventory_sub": {
+        "dashboard": "Inventory Dashboard",
+        "stock": "Stock Levels",
+        "movements": "Movements History",
+        "adjustments": "Adjustments & Counts"
+      },
+      "manufacturing": "Manufacturing",
+      "manufacturing_sub": {
+        "orders": "Production Orders",
+        "mrp": "MRP Planning",
+        "costing": "Production Costing"
+      }
+    },
+    "master_data": {
+      "customers": "Customers",
+      "suppliers": "Suppliers",
+      "products": "Products & Services"
+    },
+    "reports": {
+      "reporting": "Reporting",
+      "reporting_sub": {
+        "financial": "Financial Statements",
+        "sales": "Sales Reports",
+        "audit": "Audit Trails"
+      },
+      "bi": "Business Intelligence",
+      "bi_sub": {
+        "dashboards": "BI Dashboards",
+        "kpis": "KPIs"
+      }
+    },
+    "configuration": {
+      "system": "System Settings",
+      "security": "Users & Security",
+      "integrations": "Integrations & API"
+    }
   }
 }
