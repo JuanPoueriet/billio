@@ -21,62 +21,62 @@
         <p>¿Ya tienes una cuenta? <a routerLink="/auth/login" class="link">Inicia sesión</a></p>
       </div>
       <div class="stepper-header">
-        <div class="step" [class.active]="currentStep() >= 1" [class.completed]="currentStep() > 1">
-          <div class="step-icon">@if(currentStep() > 1){<lucide-icon [img]="CheckIcon" size="16" />} @else {1}</div>
-          <span class="step-label">Cuenta</span>
-        </div>
-        <div class="step-connector" [class.completed]="currentStep() > 1"></div>
-        <div class="step" [class.active]="currentStep() >= 2" [class.completed]="currentStep() > 2">
-          <div class="step-icon">@if(currentStep() > 2){<lucide-icon [img]="CheckIcon" size="16" />} @else {2}</div>
-          <span class="step-label">Acceso</span>
-        </div>
-        <div class="step-connector" [class.completed]="currentStep() > 2"></div>
-        <div class="step" [class.active]="currentStep() >= 3" [class.completed]="currentStep() > 3">
-          <div class="step-icon">@if(currentStep() > 3){<lucide-icon [img]="CheckIcon" size="16" />} @else {3}</div>
-          <span class="step-label">Empresa</span>
-        </div>
-        <div class="step-connector" [class.completed]="currentStep() > 3"></div>
-        <div class="step" [class.active]="currentStep() >= 4" [class.completed]="currentStep() > 4">
-          <div class="step-icon">@if(currentStep() > 4){<lucide-icon [img]="CheckIcon" size="16" />} @else {4}</div>
-          <span class="step-label">Configuración</span>
-        </div>
-        <div class="step-connector" [class.completed]="currentStep() > 4"></div>
-        <div class="step" [class.active]="currentStep() >= 5">
-          <div class="step-icon">5</div>
-          <span class="step-label">Plan</span>
-        </div>
-      </div>
-      <div class="stepper-content" [@stepAnimation]="currentStep()">
-        @switch (currentStep()) {
-        @case (1) { <app-step-account [parentForm]="account" /> }
-        @case (2) { <app-step-access [parentForm]="access" /> }
-        @case (3) { <app-step-business [parentForm]="business" /> }
-        @case (4) { <app-step-configuration [parentForm]="configuration" /> }
-        @case (5) { <app-step-plan [parentForm]="plan" /> }
-        }
-      </div>
-      @if (errorMessage()) {
-      <div class="error-message global-error">{{ errorMessage() }}</div>
-      }
-      <div class="stepper-actions">
-        @if (currentStep() > 1) {
-        <button type="button" class="secondary-button" (click)="prevStep()"><lucide-icon [img]="ArrowLeftIcon"
-            size="16" /><span>Anterior</span></button>
-        }
-        @if (currentStep() < 5) { <button type="button" class="primary-button" (click)="nextStep()">
-          <span>Siguiente</span><lucide-icon [img]="ArrowRightIcon" size="16" /></button>
-          } @else {
-          <button type="button" class="primary-button" (click)="onSubmit()" [disabled]="isRegistering()">
-            @if (isRegistering()) {
-            <span class="spinner"></span><span>Finalizando...</span>
-            } @else {
-            <span>Comenzar Prueba Gratuita</span><lucide-icon [img]="RocketIcon" size="16" />
+        @for (step of [1,2,3,4,5]; track $index) {
+        <div class="step" [class.active]="currentStep() >= $index + 1" [class.completed]="stepsCompleted()[$index]"
+          (click)="navigateToStep($index + 1)">
+          <div class="step-icon">
+            @if(stepsCompleted()[$index]){<lucide-icon [img]="CheckIcon" size="16" />}
+            @else { {{$index + 1}} }
+          </div>
+          <span class="step-label">
+            @switch ($index + 1) {
+            @case (1) { Cuenta }
+            @case (2) { Acceso }
+            @case (3) { Empresa }
+            @case (4) { Configuración }
+            @case (5) { Plan }
             }
-          </button>
-          }
+          </span>
+        </div>
+        @if ($index < 4) { <div class="step-connector" [class.completed]="stepsCompleted()[$index]">
       </div>
-      <p class="form-footer-text">Al crear una cuenta, aceptas nuestros <a href="#" class="link">Términos</a> y <a
-          href="#" class="link">Política de Privacidad</a>.</p>
+      }
+      }
     </div>
+    <div class="stepper-content" [@stepAnimation]="currentStep()">
+      @switch (currentStep()) {
+      @case (1) { <app-step-account [parentForm]="account" /> }
+      @case (2) { <app-step-access [parentForm]="access" /> }
+      @case (3) { <app-step-business [parentForm]="business" /> }
+      @case (4) { <app-step-configuration [parentForm]="configuration" /> }
+      @case (5) { <app-step-plan [parentForm]="plan" /> }
+      }
+    </div>
+    @if (errorMessage()) {
+    <div class="error-message global-error">{{ errorMessage() }}</div>
+    }
+    <div class="stepper-actions">
+      @if (currentStep() > 1) {
+      <button type="button" class="secondary-button" (click)="prevStep()">
+        <lucide-icon [img]="ArrowLeftIcon" size="16" /><span>Anterior</span>
+      </button>
+      }
+      @if (currentStep() < 5) { <button type="button" class="primary-button" (click)="nextStep()">
+        <span>Siguiente</span><lucide-icon [img]="ArrowRightIcon" size="16" />
+        </button>
+        } @else {
+        <button type="button" class="primary-button" (click)="onSubmit()"
+          [disabled]="isRegistering() || !plan.get('agreeToTerms')?.value">
+          @if (isRegistering()) {
+          <span class="spinner"></span><span>Finalizando...</span>
+          } @else {
+          <span>Comenzar Prueba Gratuita</span><lucide-icon [img]="RocketIcon" size="16" />
+          }
+        </button>
+        }
+    </div>
+    <p class="form-footer-text">Al crear una cuenta, aceptas nuestros <a href="#" class="link">Términos</a> y <a
+        href="#" class="link">Política de Privacidad</a>.</p>
   </div>
+</div>
 </div>

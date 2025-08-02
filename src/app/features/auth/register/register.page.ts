@@ -1,19 +1,23 @@
-import { Component, inject, OnInit, ChangeDetectionStrategy, signal } from '@angular/core';
-import { CommonModule } from '@angular/common';
-import { ReactiveFormsModule, FormBuilder, Validators, FormGroup, AbstractControl, ValidationErrors } from '@angular/forms';
-import { Router, RouterLink } from '@angular/router';
-import { AuthService } from '../../../core/services/auth';
-import { trigger, transition, style, animate } from '@angular/animations';
+// src/app/features/auth/register/register.page.ts
 
-// Íconos y Componentes de Pasos
-import { LucideAngularModule, Check, ArrowLeft, ArrowRight, Rocket, CheckCircle, BarChart2, Package } from 'lucide-angular';
+import { Component, OnInit, inject, signal } from '@angular/core';
+import { FormBuilder, FormGroup, Validators, AbstractControl, ValidationErrors, ReactiveFormsModule } from '@angular/forms';
+import { Router, RouterLink } from '@angular/router';
+import { CommonModule } from '@angular/common';
+
+// --- Dependencias de Lógica y UI ---
+import { ArrowLeft, ArrowRight, BarChart2, Check, CheckCircle, LucideAngularModule, Package, Rocket } from 'lucide-angular';
+import { trigger, state, style, transition, animate } from '@angular/animations';
+import { AuthService } from '../../../core/services/auth';
+import { RegisterPayload } from '../../../shared/interfaces/register-payload.interface';
 import { StepAccount } from './steps/step-account/step-account';
 import { StepAccess } from './steps/step-access/step-access';
 import { StepBusiness } from './steps/step-business/step-business';
 import { StepConfiguration } from './steps/step-configuration/step-configuration';
 import { StepPlan } from './steps/step-plan/step-plan';
+import { strongPasswordValidator } from '../../../shared/validators/password.validator'; // Nueva importación
 
-// Validador personalizado
+// --- Función Validadora ---
 export function passwordMatchValidator(control: AbstractControl): ValidationErrors | null {
   const password = control.get('password')?.value;
   const confirmPassword = control.get('confirmPassword')?.value;
@@ -21,29 +25,36 @@ export function passwordMatchValidator(control: AbstractControl): ValidationErro
 };
 
 @Component({
-  selector: 'app-register-page',
+  selector: 'app-register',
   standalone: true,
   imports: [
-    CommonModule, ReactiveFormsModule, RouterLink, LucideAngularModule,
-    StepAccount, StepAccess, StepBusiness, StepConfiguration, StepPlan
+    CommonModule,
+    ReactiveFormsModule,
+    LucideAngularModule,
+    RouterLink,
+    StepAccount,
+    StepAccess,
+    StepBusiness,
+    StepConfiguration,
+    StepPlan,
   ],
   templateUrl: './register.page.html',
   styleUrls: ['./register.page.scss'],
-  changeDetection: ChangeDetectionStrategy.OnPush,
   animations: [
     trigger('stepAnimation', [
       transition(':increment', [
-        style({ transform: 'translateX(30px)', opacity: 0 }),
+        style({ transform: 'translateX(100%)', opacity: 0 }),
         animate('300ms ease-out', style({ transform: 'translateX(0)', opacity: 1 }))
       ]),
       transition(':decrement', [
-        style({ transform: 'translateX(-30px)', opacity: 0 }),
+        style({ transform: 'translateX(-100%)', opacity: 0 }),
         animate('300ms ease-out', style({ transform: 'translateX(0)', opacity: 1 }))
       ])
     ])
   ]
 })
 export class RegisterPage implements OnInit {
+
   // Íconos para la plantilla
   protected readonly CheckCircleIcon = CheckCircle;
   protected readonly BarChart2Icon = BarChart2;
@@ -52,12 +63,16 @@ export class RegisterPage implements OnInit {
   protected readonly ArrowLeftIcon = ArrowLeft;
   protected readonly ArrowRightIcon = ArrowRight;
   protected readonly RocketIcon = Rocket;
-  
+
+  // --- Inyección de Dependencias ---
   private fb = inject(FormBuilder);
   private authService = inject(AuthService);
   private router = inject(Router);
 
+  // --- Lógica del Asistente de Pasos (Stepper) ---
   currentStep = signal(1);
+
+  // --- Estado del Formulario y UI (usando signals como lo espera el HTML) ---
   registerForm!: FormGroup;
   errorMessage = signal<string | null>(null);
   isRegistering = signal(false);
@@ -68,13 +83,17 @@ export class RegisterPage implements OnInit {
         firstName: ['', [Validators.required]],
         lastName: ['', [Validators.required]],
         jobTitle: [''],
-        phone: [''], // Teléfono del usuario
+        phone: [''],
         avatarUrl: [null],
       }),
       access: this.fb.group({
         email: ['', [Validators.required, Validators.email]],
         passwordGroup: this.fb.group({
-          password: ['', [Validators.required, Validators.minLength(8)]],
+          password: ['', [
+            Validators.required,
+            Validators.minLength(8),
+            strongPasswordValidator() // Nueva validación
+          ]],
           confirmPassword: ['', [Validators.required]],
         }, { validators: passwordMatchValidator }),
       }),
@@ -89,7 +108,7 @@ export class RegisterPage implements OnInit {
       configuration: this.fb.group({
         address: [''], city: [''], stateOrProvince: [''], postalCode: [''],
         country: ['DO', [Validators.required]],
-        companyPhone: ['', [Validators.required]], // Teléfono de la empresa
+        companyPhone: ['', [Validators.required]],
         taxId: ['', [Validators.required]],
         naicsCode: [''],
         currency: ['DOP', [Validators.required]],
@@ -99,85 +118,161 @@ export class RegisterPage implements OnInit {
       }),
       plan: this.fb.group({
         planId: ['trial', [Validators.required]],
-        acceptTerms: [false, [Validators.requiredTrue]],
+        agreeToTerms: [false, [Validators.requiredTrue]],
         marketingOptIn: [true],
       }),
     });
   }
 
+  // Array de booleanos para rastrear qué pasos están completados
+  stepsCompleted = signal<boolean[]>(new Array(5).fill(false));
+
   nextStep(): void {
-    if (this.isStepValid(this.currentStep())) this.currentStep.update(step => step + 1);
+    const currentForm = this.getCurrentStepForm();
+    if (currentForm?.invalid) {
+      currentForm.markAllAsTouched();
+      this.errorMessage.set('Por favor, completa los campos requeridos correctamente.');
+      return;
+    }
+
+    // Marcar el paso actual como completado
+    this.stepsCompleted.update(completed => {
+      const newCompleted = [...completed];
+      newCompleted[this.currentStep() - 1] = true;
+      return newCompleted;
+    });
+
+    if (this.currentStep() < 5) {
+      this.currentStep.update(step => step + 1);
+      this.errorMessage.set(null);
+    }
   }
 
-  prevStep(): void {
-    this.currentStep.update(step => step - 1);
+  // Función para navegar a un paso específico
+  navigateToStep(stepIndex: number): void {
+    // Solo permitir si el paso está completado y es anterior al paso actual
+    if (stepIndex < this.currentStep() && this.stepsCompleted()[stepIndex - 1]) {
+      this.currentStep.set(stepIndex);
+    }
   }
 
-  isStepValid(step: number): boolean {
-    const stepGroup = this.getStepGroup(step);
-    stepGroup.markAllAsTouched();
-    return stepGroup.valid;
-  }
-
-  getStepGroup(step: number): FormGroup {
-    return [this.account, this.access, this.business, this.configuration, this.plan][step - 1];
-  }
-
+  // --- Getters para acceder fácilmente a los sub-formularios ---
   get account() { return this.registerForm.get('account') as FormGroup; }
   get access() { return this.registerForm.get('access') as FormGroup; }
   get business() { return this.registerForm.get('business') as FormGroup; }
   get configuration() { return this.registerForm.get('configuration') as FormGroup; }
   get plan() { return this.registerForm.get('plan') as FormGroup; }
 
+
+
+  prevStep(): void {
+    if (this.currentStep() > 1) {
+      this.currentStep.update(step => step - 1);
+    }
+  }
+
+  // Obtener el formulario del paso actual
+  private getCurrentStepForm(): FormGroup | null {
+    const stepNames = ['account', 'access', 'business', 'configuration', 'plan'];
+    const currentStepName = stepNames[this.currentStep() - 1];
+    return this.registerForm.get(currentStepName) as FormGroup;
+  }
+
+  // --- Lógica de Envío del Formulario (onSubmit) ---
   onSubmit(): void {
-    this.registerForm.markAllAsTouched();
+    this.markAllAsTouched();
+
     if (this.registerForm.invalid) {
-      this.errorMessage.set('Por favor, revisa todos los pasos y completa los campos requeridos.');
-      if (this.plan.get('acceptTerms')?.invalid) this.errorMessage.set('Debes aceptar los Términos y la Política de Privacidad.');
+      this.errorMessage.set('Por favor, completa todos los campos requeridos correctamente.');
       return;
     }
+
     this.isRegistering.set(true);
     this.errorMessage.set(null);
 
-    const formData = new FormData();
     const formValue = this.registerForm.getRawValue();
-    
-    // Construcción del payload
-    const payload = {
-      // User
-      firstName: formValue.account.firstName, lastName: formValue.account.lastName,
-      email: formValue.access.email, password: formValue.access.passwordGroup.password,
-      userPhone: formValue.account.phone, // Clave única para el teléfono del usuario
-      jobTitle: formValue.account.jobTitle,
-      // Company
-      companyName: formValue.business.companyName, mainEmail: formValue.access.email,
-      companyPhone: formValue.configuration.companyPhone, // Clave única para el teléfono de la empresa
-      address: formValue.configuration.address, city: formValue.configuration.city, stateOrProvince: formValue.configuration.stateOrProvince,
-      postalCode: formValue.configuration.postalCode, country: formValue.configuration.country,
-      taxId: formValue.configuration.taxId, legalForm: formValue.business.legalForm,
-      industry: formValue.business.industry, naicsCode: formValue.configuration.naicsCode,
-      currency: formValue.configuration.currency, defaultTaxRate: formValue.configuration.defaultTaxRate,
-      fiscalYearStart: formValue.configuration.fiscalYearStart, 
-      numberOfEmployees: formValue.business.numberOfEmployees, website: formValue.business.website,
-      timezone: formValue.configuration.timezone,
-      // Consent
-      acceptTerms: formValue.plan.acceptTerms, marketingOptIn: formValue.plan.marketingOptIn,
+
+    const payload: RegisterPayload = {
+      firstName: formValue.account.firstName,
+      lastName: formValue.account.lastName,
+      email: formValue.access.email,
+      password: formValue.access.passwordGroup.password,
+      organizationName: formValue.business.companyName,
+      rnc: formValue.configuration.taxId,
     };
 
-    // Añadir campos de texto a FormData
-    for (const [key, value] of Object.entries(payload)) {
-      formData.append(key, String(value));
-    }
-    
-    // Añadir archivos a FormData
-    if (formValue.account.avatarUrl) formData.append('avatarFile', formValue.account.avatarUrl);
-    if (formValue.business.logoFile) formData.append('logoFile', formValue.business.logoFile);
-    
-    // this.authService.registerWithFormData(formData).subscribe({...});
-    // Simulación de éxito
-    setTimeout(() => {
+    this.authService.register(payload).subscribe({
+      next: () => {
         this.isRegistering.set(false);
-        this.router.navigate(['/app']);
-    }, 1500);
+        alert('¡Registro exitoso! Ahora puedes iniciar sesión.');
+        this.router.navigate(['/auth/login']);
+      },
+      error: (err) => {
+        if (err.status === 409) {
+          this.errorMessage.set('El correo electrónico ya está registrado. Por favor usa otro correo.');
+        } else if (err.status === 400 && err.error?.details) {
+          this.handleFieldErrors(err.error.details);
+        } else {
+          this.errorMessage.set(err.error?.message || 'Ocurrió un error inesperado durante el registro.');
+        }
+        this.isRegistering.set(false);
+      }
+    });
+  }
+
+  private markAllAsTouched() {
+    Object.values(this.registerForm.controls).forEach(control => {
+      if (control instanceof FormGroup) {
+        Object.values(control.controls).forEach(subControl => {
+          subControl.markAsTouched();
+        });
+      } else {
+        control.markAsTouched();
+      }
+    });
+  }
+
+  private handleFieldErrors(details: any[]) {
+    let firstErrorStep = 5; // Start from last step
+
+    details.forEach((err: any) => {
+      const field = err.field;
+      const control = this.findControlInForm(field);
+
+      if (control) {
+        control.setErrors({ serverError: err.message });
+        const step = this.getStepForField(field);
+        if (step < firstErrorStep) firstErrorStep = step;
+      }
+    });
+
+    if (firstErrorStep < 5) {
+      this.currentStep.set(firstErrorStep);
+      this.errorMessage.set('Por favor, corrige los errores en los campos resaltados.');
+    } else {
+      this.errorMessage.set('Por favor, completa todos los campos requeridos correctamente.');
+    }
+  }
+
+  private findControlInForm(controlPath: string): AbstractControl | null {
+    const paths = controlPath.split('.');
+    let currentControl: AbstractControl | null = this.registerForm;
+
+    for (const path of paths) {
+      if (currentControl instanceof FormGroup) {
+        currentControl = currentControl.get(path);
+      } else {
+        return null;
+      }
+    }
+    return currentControl;
+  }
+
+  private getStepForField(field: string): number {
+    if (field.startsWith('account')) return 1;
+    if (field.startsWith('access')) return 2;
+    if (field.startsWith('business')) return 3;
+    if (field.startsWith('configuration')) return 4;
+    return 5; // plan
   }
 }

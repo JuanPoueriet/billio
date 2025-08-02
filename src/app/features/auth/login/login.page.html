@@ -5,31 +5,30 @@
             <p class="auth-subtitle">Bienvenido de nuevo a tu espacio de trabajo.</p>
         </div>
         <form [formGroup]="loginForm" (ngSubmit)="onSubmit()" class="auth-form" novalidate>
-            <div class="form-field">
+            <div class="form-field" [class.error]="email?.invalid && (email?.touched || email?.dirty)">
                 <label for="email">Correo Electrónico</label>
                 <div class="input-wrapper">
                     <lucide-icon [img]="MailIcon" size="18" class="input-icon"></lucide-icon>
                     <input id="email" type="email" formControlName="email" placeholder="tu@empresa.com"
                         [class.is-invalid]="email?.invalid && email?.touched">
                 </div>
-                @if (email?.invalid && email?.touched) {
+                @if (email?.invalid && (email?.touched || email?.dirty)) {
                 <div class="error-message">
-                    @if (email?.errors?.['required']) { El correo es obligatorio. }
-                    @if (email?.errors?.['email']) { Por favor, introduce un correo válido. }
+                    @if (email?.errors?.['required']) { <span>El correo es obligatorio.</span> }
+                    @if (email?.errors?.['email']) { <span>Por favor, introduce un correo válido.</span> }
                 </div>
                 }
             </div>
-            <div class="form-field">
+            <div class="form-field" [class.error]="password?.invalid && (password?.touched || password?.dirty)">
                 <label for="password">Contraseña</label>
                 <div class="input-wrapper">
                     <lucide-icon [img]="LockIcon" size="18" class="input-icon"></lucide-icon>
                     <input id="password" type="password" formControlName="password" placeholder="••••••••"
                         [class.is-invalid]="password?.invalid && password?.touched">
                 </div>
-                @if (password?.invalid && password?.touched) {
+                @if (password?.invalid && (password?.touched || password?.dirty)) {
                 <div class="error-message">
-                    @if (password?.errors?.['required']) { La contraseña es obligatoria. }
-                    @if (password?.errors?.['minlength']) { Debe tener al menos 6 caracteres. }
+                    @if (password?.errors?.['required']) { <span>La contraseña es obligatoria.</span> }
                 </div>
                 }
             </div>

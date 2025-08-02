@@ -13,20 +13,41 @@
             </label>
         </div>
     </div>
-    <div class="form-field"><label for="companyName">Nombre Comercial / Razón Social*</label>
+    <div class="form-field"
+        [class.error]="parentForm.get('companyName')?.invalid && (parentForm.get('companyName')?.touched || parentForm.get('companyName')?.dirty)">
+        <label for="companyName">Nombre Comercial / Razón Social*</label>
         <div class="input-wrapper"><lucide-icon [img]="CompanyIcon" size="18" class="input-icon"></lucide-icon><input
                 id="companyName" formControlName="companyName"></div>
+        @if (parentForm.get('companyName')?.invalid && (parentForm.get('companyName')?.touched ||
+        parentForm.get('companyName')?.dirty)) {
+        <div class="error-message">
+            @if (parentForm.get('companyName')?.errors?.['required']) { <span>Nombre de empresa es obligatorio</span> }
+            @if (parentForm.get('companyName')?.errors?.['serverError']) { <span>{{
+                parentForm.get('companyName')?.errors?.['serverError'] }}</span> }
+        </div>
+        }
     </div>
     <div class="form-row">
-        <div class="form-field"><label for="industry">Industria*</label>
+        <div class="form-field"
+            [class.error]="parentForm.get('industry')?.invalid && (parentForm.get('industry')?.touched || parentForm.get('industry')?.dirty)">
+            <label for="industry">Industria*</label>
             <div class="input-wrapper"><lucide-icon [img]="IndustryIcon" size="18"
                     class="input-icon"></lucide-icon><select id="industry" formControlName="industry">
                     <option value="" disabled>Selecciona un sector</option>
                     <option value="retail">Venta al por menor</option>
                     <option value="services">Servicios</option>
                 </select></div>
+            @if (parentForm.get('industry')?.invalid && (parentForm.get('industry')?.touched ||
+            parentForm.get('industry')?.dirty)) {
+            <div class="error-message">
+                @if (parentForm.get('industry')?.errors?.['required']) { <span>Industria es obligatoria</span> }
+                @if (parentForm.get('industry')?.errors?.['serverError']) { <span>{{
+                    parentForm.get('industry')?.errors?.['serverError'] }}</span> }
+            </div>
+            }
         </div>
-        <div class="form-field"><label for="legalForm">Forma Legal (Opcional)</label>
+        <div class="form-field">
+            <label for="legalForm">Forma Legal (Opcional)</label>
             <div class="input-wrapper"><lucide-icon [img]="LegalFormIcon" size="18"
                     class="input-icon"></lucide-icon><select id="legalForm" formControlName="legalForm">
                     <option value="">No especificado</option>
@@ -36,7 +57,8 @@
         </div>
     </div>
     <div class="form-row">
-        <div class="form-field"><label for="numberOfEmployees">Tamaño (Opcional)</label>
+        <div class="form-field">
+            <label for="numberOfEmployees">Tamaño (Opcional)</label>
             <div class="input-wrapper"><lucide-icon [img]="EmployeesIcon" size="18"
                     class="input-icon"></lucide-icon><select id="numberOfEmployees" formControlName="numberOfEmployees">
                     <option value="">Selecciona una opción</option>
@@ -44,7 +66,8 @@
                     <option value="2-5">2-5</option>
                 </select></div>
         </div>
-        <div class="form-field"><label for="website">Sitio Web (Opcional)</label>
+        <div class="form-field">
+            <label for="website">Sitio Web (Opcional)</label>
             <div class="input-wrapper"><lucide-icon [img]="WebsiteIcon" size="18"
                     class="input-icon"></lucide-icon><input id="website" formControlName="website"
                     placeholder="https://tuempresa.com"></div>
