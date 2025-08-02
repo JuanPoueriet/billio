@@ -1,47 +1,66 @@
 <div class="auth-container">
     <div class="auth-card">
         <div class="auth-header">
-            <h2 class="auth-title">Iniciar Sesión</h2>
+            <h1 class="auth-title">Iniciar Sesión</h1> <!-- Changed to h1 for better accessibility -->
             <p class="auth-subtitle">Bienvenido de nuevo a tu espacio de trabajo.</p>
         </div>
-        <form [formGroup]="loginForm" (ngSubmit)="onSubmit()" class="auth-form" novalidate>
+        <form [formGroup]="loginForm" (ngSubmit)="onSubmit()" class="auth-form" novalidate #formElement>
             <div class="form-field" [class.error]="email?.invalid && (email?.touched || email?.dirty)">
-                <label for="email">Correo Electrónico</label>
+                <label for="email" class="sr-only">Correo Electrónico</label>
                 <div class="input-wrapper">
-                    <lucide-icon [img]="MailIcon" size="18" class="input-icon"></lucide-icon>
+                    <lucide-icon [img]="MailIcon" size="18" class="input-icon" aria-hidden="true"></lucide-icon>
                     <input id="email" type="email" formControlName="email" placeholder="tu@empresa.com"
-                        [class.is-invalid]="email?.invalid && email?.touched">
+                        [class.is-invalid]="email?.invalid && email?.touched" [attr.aria-invalid]="email?.invalid"
+                        [attr.aria-describedby]="email?.invalid ? 'email-error' : null">
                 </div>
                 @if (email?.invalid && (email?.touched || email?.dirty)) {
-                <div class="error-message">
+                <div class="error-message" id="email-error">
                     @if (email?.errors?.['required']) { <span>El correo es obligatorio.</span> }
                     @if (email?.errors?.['email']) { <span>Por favor, introduce un correo válido.</span> }
                 </div>
                 }
             </div>
+
             <div class="form-field" [class.error]="password?.invalid && (password?.touched || password?.dirty)">
-                <label for="password">Contraseña</label>
+                <label for="password" class="sr-only">Contraseña</label>
                 <div class="input-wrapper">
-                    <lucide-icon [img]="LockIcon" size="18" class="input-icon"></lucide-icon>
-                    <input id="password" type="password" formControlName="password" placeholder="••••••••"
-                        [class.is-invalid]="password?.invalid && password?.touched">
+                    <lucide-icon [img]="LockIcon" size="18" class="input-icon" aria-hidden="true"></lucide-icon>
+                    <input id="password" [type]="passwordVisible() ? 'text' : 'password'" formControlName="password"
+                        placeholder="••••••••" [class.is-invalid]="password?.invalid && password?.touched"
+                        [attr.aria-invalid]="password?.invalid"
+                        [attr.aria-describedby]="password?.invalid ? 'password-error' : null">
+                    <button type="button" (click)="togglePasswordVisibility()" class="toggle-password"
+                        [attr.aria-label]="passwordVisible() ? 'Ocultar contraseña' : 'Mostrar contraseña'">
+                        @if (passwordVisible()) {
+                        <lucide-icon [img]="EyeOffIcon" size="18" aria-hidden="true"></lucide-icon>
+                        } @else {
+                        <lucide-icon [img]="EyeIcon" size="18" aria-hidden="true"></lucide-icon>
+                        }
+                    </button>
                 </div>
                 @if (password?.invalid && (password?.touched || password?.dirty)) {
-                <div class="error-message">
+                <div class="error-message" id="password-error">
                     @if (password?.errors?.['required']) { <span>La contraseña es obligatoria.</span> }
                 </div>
                 }
             </div>
+
             @if (errorMessage()) {
-            <div class="error-message global-error">{{ errorMessage() }}</div>
+            <div class="error-message global-error" role="alert" id="global-error">
+                {{ errorMessage() }}
+            </div>
             }
-            <button type="submit" [disabled]="isLoggingIn()" class="submit-button">
+
+            <button type="submit" [disabled]="isLoggingIn()" class="submit-button" [attr.aria-busy]="isLoggingIn()"
+                [attr.aria-describedby]="errorMessage() ? 'global-error' : null">
                 @if (isLoggingIn()) {
-                <span class="spinner"></span> <span>Procesando...</span>
+                <span class="spinner" aria-hidden="true"></span>
+                <span>Procesando...</span>
                 } @else {
                 <span>Entrar</span>
                 }
             </button>
+
             <div class="auth-footer">
                 <a routerLink="/auth/register" class="footer-link">Crear una cuenta nueva</a>
             </div>

@@ -1,6 +1,6 @@
 // src/app/features/auth/login/login.page.ts
 
-import { Component, OnInit, inject, signal } from '@angular/core';
+import { Component, ElementRef, OnInit, ViewChild, inject, signal } from '@angular/core';
 import {
   AbstractControl,
   FormBuilder,
@@ -11,7 +11,7 @@ import {
 import { Router, RouterModule } from '@angular/router';
 import { CommonModule } from '@angular/common';
 import { AuthService } from '../../../core/services/auth';
-import { LucideAngularModule, Mail, Lock } from 'lucide-angular';
+import { LucideAngularModule, Mail, Lock, EyeOff, Eye } from 'lucide-angular';
 
 @Component({
   selector: 'app-login',
@@ -37,6 +37,16 @@ export class LoginPage implements OnInit {
   errorMessage = signal<string | null>(null);
   isLoggingIn = signal(false);
 
+  // ... existing icon declarations ...
+  EyeIcon = Eye;
+  EyeOffIcon = EyeOff;
+
+  // Add password visibility signal
+  passwordVisible = signal(false);
+
+  // Add reference to form for focus management
+  @ViewChild('formElement') formElement!: ElementRef<HTMLFormElement>;
+
   ngOnInit() {
     this.loginForm = this.fb.group({
       email: ['', [Validators.required, Validators.email]],
@@ -52,7 +62,24 @@ export class LoginPage implements OnInit {
     return this.loginForm.get('password');
   }
 
+  // Add password toggle method
+  togglePasswordVisibility(): void {
+    this.passwordVisible.update(visible => !visible);
+  }
+
   onSubmit(): void {
+
+    this.loginForm.markAllAsTouched();
+
+    if (this.loginForm.invalid) {
+      // Focus first invalid field
+      const firstInvalidControl = this.getFirstInvalidControl();
+      if (firstInvalidControl) {
+        firstInvalidControl.focus();
+      }
+      return;
+    }
+
     this.loginForm.markAllAsTouched();
 
     if (this.loginForm.invalid) {
@@ -75,4 +102,15 @@ export class LoginPage implements OnInit {
       }
     });
   }
+
+  private getFirstInvalidControl(): HTMLElement | null {
+    const invalidControls = this.formElement.nativeElement.querySelectorAll(
+      '.is-invalid, [aria-invalid="true"]'
+    );
+
+    return invalidControls.length > 0
+      ? invalidControls[0] as HTMLElement
+      : null;
+  }
 }
+

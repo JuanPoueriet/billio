@@ -67,3 +67,25 @@
         transform: rotate(360deg);
     }
 }
+
+.toggle-password {
+  position: absolute;
+  right: 12px;
+  top: 50%;
+  transform: translateY(-50%);
+  background: none;
+  border: none;
+  cursor: pointer;
+  color: var(--text-secondary);
+  padding: 4px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  &:hover,
+  &:focus {
+    color: var(--primary);
+    outline: 2px solid var(--primary-light);
+    border-radius: 4px;
+  }
+}
