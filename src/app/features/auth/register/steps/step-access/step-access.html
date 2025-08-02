@@ -73,7 +73,7 @@
                 </div>
                 }
 
-                <!-- Mensajes de error con manejo seguro -->
+                <!-- Mensajes de error simplificados -->
                 @if (passwordGroup?.get?.('password')?.invalid && (passwordGroup?.get?.('password')?.touched ||
                 passwordGroup?.get?.('password')?.dirty)) {
                 <div class="error-message">
@@ -83,17 +83,8 @@
                     @if (passwordGroup?.get?.('password')?.errors?.['minlength']) {
                     <span>Mínimo 8 caracteres</span>
                     }
-                    @if (passwordGroup?.get?.('password')?.errors?.['strongPassword']?.missingUppercase) {
-                    <span>Debe contener al menos una mayúscula</span>
-                    }
-                    @if (passwordGroup?.get?.('password')?.errors?.['strongPassword']?.missingNumber) {
-                    <span>Debe contener al menos un número</span>
-                    }
-                    @if (passwordGroup?.get?.('password')?.errors?.['strongPassword']?.missingSpecial) {
-                    <span>Debe contener al menos un símbolo</span>
-                    }
-                    @if (passwordGroup?.get?.('password')?.errors?.['serverError']) {
-                    <span>{{ passwordGroup?.get?.('password')?.errors?.['serverError'] }}</span>
+                    @if (passwordGroup?.get?.('password')?.errors?.['strongPassword']) {
+                    <span>Debe contener: mayúscula, número y símbolo</span>
                     }
                 </div>
                 }
@@ -118,9 +109,6 @@
                     }
                     @if (passwordGroup?.get?.('confirmPassword')?.errors?.['passwordMismatch']) {
                     <span>Las contraseñas no coinciden</span>
-                    }
-                    @if (passwordGroup?.get?.('confirmPassword')?.errors?.['serverError']) {
-                    <span>{{ passwordGroup?.get?.('confirmPassword')?.errors?.['serverError'] }}</span>
                     }
                 </div>
                 }

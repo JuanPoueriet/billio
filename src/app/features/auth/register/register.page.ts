@@ -4,8 +4,6 @@ import { Component, OnInit, inject, signal } from '@angular/core';
 import { FormBuilder, FormGroup, Validators, AbstractControl, ValidationErrors, ReactiveFormsModule } from '@angular/forms';
 import { Router, RouterLink } from '@angular/router';
 import { CommonModule } from '@angular/common';
-
-// --- Dependencias de Lógica y UI ---
 import { ArrowLeft, ArrowRight, BarChart2, Check, CheckCircle, LucideAngularModule, Package, Rocket } from 'lucide-angular';
 import { trigger, state, style, transition, animate } from '@angular/animations';
 import { AuthService } from '../../../core/services/auth';
@@ -15,9 +13,8 @@ import { StepAccess } from './steps/step-access/step-access';
 import { StepBusiness } from './steps/step-business/step-business';
 import { StepConfiguration } from './steps/step-configuration/step-configuration';
 import { StepPlan } from './steps/step-plan/step-plan';
-import { strongPasswordValidator } from '../../../shared/validators/password.validator'; // Nueva importación
+import { strongPasswordValidator } from '../../../shared/validators/password.validator';
 
-// --- Función Validadora ---
 export function passwordMatchValidator(control: AbstractControl): ValidationErrors | null {
   const password = control.get('password')?.value;
   const confirmPassword = control.get('confirmPassword')?.value;
@@ -54,8 +51,6 @@ export function passwordMatchValidator(control: AbstractControl): ValidationErro
   ]
 })
 export class RegisterPage implements OnInit {
-
-  // Íconos para la plantilla
   protected readonly CheckCircleIcon = CheckCircle;
   protected readonly BarChart2Icon = BarChart2;
   protected readonly PackageIcon = Package;
@@ -64,18 +59,15 @@ export class RegisterPage implements OnInit {
   protected readonly ArrowRightIcon = ArrowRight;
   protected readonly RocketIcon = Rocket;
 
-  // --- Inyección de Dependencias ---
   private fb = inject(FormBuilder);
   private authService = inject(AuthService);
   private router = inject(Router);
 
-  // --- Lógica del Asistente de Pasos (Stepper) ---
   currentStep = signal(1);
-
-  // --- Estado del Formulario y UI (usando signals como lo espera el HTML) ---
   registerForm!: FormGroup;
   errorMessage = signal<string | null>(null);
   isRegistering = signal(false);
+  stepsCompleted = signal<boolean[]>(new Array(5).fill(false));
 
   ngOnInit(): void {
     this.registerForm = this.fb.group({
@@ -92,7 +84,7 @@ export class RegisterPage implements OnInit {
           password: ['', [
             Validators.required,
             Validators.minLength(8),
-            strongPasswordValidator() // Nueva validación
+            strongPasswordValidator()
           ]],
           confirmPassword: ['', [Validators.required]],
         }, { validators: passwordMatchValidator }),
@@ -124,9 +116,6 @@ export class RegisterPage implements OnInit {
     });
   }
 
-  // Array de booleanos para rastrear qué pasos están completados
-  stepsCompleted = signal<boolean[]>(new Array(5).fill(false));
-
   nextStep(): void {
     const currentForm = this.getCurrentStepForm();
     if (currentForm?.invalid) {
@@ -135,7 +124,6 @@ export class RegisterPage implements OnInit {
       return;
     }
 
-    // Marcar el paso actual como completado
     this.stepsCompleted.update(completed => {
       const newCompleted = [...completed];
       newCompleted[this.currentStep() - 1] = true;
@@ -148,22 +136,17 @@ export class RegisterPage implements OnInit {
     }
   }
 
-  // Función para navegar a un paso específico
   navigateToStep(stepIndex: number): void {
-    // Solo permitir si el paso está completado y es anterior al paso actual
     if (stepIndex < this.currentStep() && this.stepsCompleted()[stepIndex - 1]) {
       this.currentStep.set(stepIndex);
     }
   }
 
-  // --- Getters para acceder fácilmente a los sub-formularios ---
   get account() { return this.registerForm.get('account') as FormGroup; }
   get access() { return this.registerForm.get('access') as FormGroup; }
   get business() { return this.registerForm.get('business') as FormGroup; }
   get configuration() { return this.registerForm.get('configuration') as FormGroup; }
   get plan() { return this.registerForm.get('plan') as FormGroup; }
-
-
 
   prevStep(): void {
     if (this.currentStep() > 1) {
@@ -171,18 +154,31 @@ export class RegisterPage implements OnInit {
     }
   }
 
-  // Obtener el formulario del paso actual
   private getCurrentStepForm(): FormGroup | null {
     const stepNames = ['account', 'access', 'business', 'configuration', 'plan'];
     const currentStepName = stepNames[this.currentStep() - 1];
     return this.registerForm.get(currentStepName) as FormGroup;
   }
 
-  // --- Lógica de Envío del Formulario (onSubmit) ---
+  // --- NUEVO: Encontrar primer paso inválido ---
+  private findFirstInvalidStep(): number {
+    const stepNames = ['account', 'access', 'business', 'configuration', 'plan'];
+    for (let i = 0; i < stepNames.length; i++) {
+      const stepGroup = this.registerForm.get(stepNames[i]) as FormGroup;
+      if (stepGroup.invalid) {
+        return i + 1;
+      }
+    }
+    return 1;
+  }
+
   onSubmit(): void {
     this.markAllAsTouched();
 
     if (this.registerForm.invalid) {
+      // Navegar al primer paso inválido
+      const firstInvalidStep = this.findFirstInvalidStep();
+      this.currentStep.set(firstInvalidStep);
       this.errorMessage.set('Por favor, completa todos los campos requeridos correctamente.');
       return;
     }
@@ -213,7 +209,7 @@ export class RegisterPage implements OnInit {
         } else if (err.status === 400 && err.error?.details) {
           this.handleFieldErrors(err.error.details);
         } else {
-          this.errorMessage.set(err.error?.message || 'Ocurrió un error inesperado durante el registro.');
+          this.errorMessage.set(err.customMessage || 'Ocurrió un error inesperado durante el registro.');
         }
         this.isRegistering.set(false);
       }
@@ -233,7 +229,7 @@ export class RegisterPage implements OnInit {
   }
 
   private handleFieldErrors(details: any[]) {
-    let firstErrorStep = 5; // Start from last step
+    let firstErrorStep = 5;
 
     details.forEach((err: any) => {
       const field = err.field;
@@ -273,6 +269,6 @@ export class RegisterPage implements OnInit {
     if (field.startsWith('access')) return 2;
     if (field.startsWith('business')) return 3;
     if (field.startsWith('configuration')) return 4;
-    return 5; // plan
+    return 5;
   }
 }

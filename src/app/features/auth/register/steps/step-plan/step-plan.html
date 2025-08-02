@@ -39,16 +39,13 @@
         </div>
     </div>
     <div class="terms-field"
-        [class.error]="parentForm.get('agreeToTerms')?.invalid && (parentForm.get('agreeToTerms')?.touched || parentForm.get('agreeToTerms')?.dirty)">
+        [class.error]="parentForm.get('agreeToTerms')?.invalid && parentForm.get('agreeToTerms')?.touched">
         <input id="agreeToTerms" type="checkbox" formControlName="agreeToTerms">
         <label for="agreeToTerms">Acepto los <a href="#" class="link">Términos de Servicio</a> y la <a href="#"
                 class="link">Política de Privacidad</a> de FacturaPRO.*</label>
-        @if (parentForm.get('agreeToTerms')?.invalid && (parentForm.get('agreeToTerms')?.touched ||
-        parentForm.get('agreeToTerms')?.dirty)) {
+        @if (parentForm.get('agreeToTerms')?.invalid && parentForm.get('agreeToTerms')?.touched) {
         <div class="error-message">
-            @if (parentForm.get('agreeToTerms')?.errors?.['required']) { <span>Debes aceptar los términos</span> }
-            @if (parentForm.get('agreeToTerms')?.errors?.['serverError']) { <span>{{
-                parentForm.get('agreeToTerms')?.errors?.['serverError'] }}</span> }
+            <span>Debes aceptar los términos y condiciones</span>
         </div>
         }
     </div>
