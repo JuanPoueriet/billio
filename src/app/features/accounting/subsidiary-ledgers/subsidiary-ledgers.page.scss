@@ -2,7 +2,7 @@
 @use "../../../../assets/styles/forms" as mixins;
 
 // Reutiliza los estilos de la vista de Libro Mayor
-@import "../general-ledger/general-ledger.page.scss";
+@use "../general-ledger/general-ledger.page.scss";
 
 .filter-bar {
   @include views.card;

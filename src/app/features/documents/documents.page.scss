@@ -1,8 +1,8 @@
 @use '../../../assets/styles/view-styles' as views;
 
 // Reutilizamos la base de estilos de las vistas
-// @import '../../sales/history/history.page.scss';
-@import '../sales/history/history.page.scss';
+// @use '../../sales/history/history.page.scss';
+@use '../sales/history/history.page.scss';
 
 .file-explorer {
     padding: 0;

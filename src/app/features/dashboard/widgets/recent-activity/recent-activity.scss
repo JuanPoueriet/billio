@@ -1,5 +1,5 @@
 @use '../../../../../assets/styles/forms' as mixins;
-@import '../widget-styles.scss';
+@use '../widget-styles.scss';
 
 .widget-content {
     padding: 1.5rem 1rem 1.5rem 2rem; // Más padding a la izquierda para la línea de tiempo

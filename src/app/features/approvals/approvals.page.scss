@@ -2,7 +2,7 @@
 @use '../../../assets/styles/forms' as mixins;
 
 // Reutilizamos la mayoría de los estilos de la vista "My Work"
-@import '../my-work/my-work.page.scss';
+@use '../my-work/my-work.page.scss';
 
 // Estilos específicos para la página de aprobaciones
 .approval-list {

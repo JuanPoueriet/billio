@@ -1,7 +1,7 @@
 @use '../../../assets/styles/view-styles' as views;
 
 // Reutilizamos la base de estilos
-@import '../my-work/my-work.page.scss';
+@use '../my-work/my-work.page.scss';
 
 // Estilos específicos para la página de notificaciones
 .notifications-list {

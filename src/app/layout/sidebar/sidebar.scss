@@ -1,5 +1,5 @@
 // Import variables to be consistent with the app's theme
-@import "../../../assets/styles/variables";
+@use "../../../assets/styles/variables";
 
 :host {
   display: block;
@@ -80,7 +80,7 @@ a.sub-menu-item {
   display: flex;
   align-items: center;
   padding: 0.75rem;
-  border-radius: $border-radius;
+  border-radius: var(--border-radius);
   cursor: pointer;
   text-decoration: none;
   color: var(--sidebar-text, #a0aec0);
@@ -186,7 +186,7 @@ a.sub-menu-item {
     display: flex;
     align-items: center;
     padding: 0.5rem;
-    border-radius: $border-radius;
+    border-radius: var(--border-radius);
 
     .avatar {
       width: 40px;

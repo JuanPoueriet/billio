@@ -1,6 +1,6 @@
 @use '../../../../assets/styles/variables' as *;
 @use '../../../../assets/styles/forms' as mixins;
-@import '../../sales/history/history.page.scss'; // Reutiliza la base de estilos
+@use '../../sales/history/history.page.scss'; // Reutiliza la base de estilos
 
 .invoice-id {
     color: var(--text-secondary);

@@ -1,6 +1,6 @@
 @use '../../../../assets/styles/variables' as *;
 @use '../../../../assets/styles/forms' as mixins;
-@import '../../sales/history/history.page.scss'; // Reutilizamos la base de estilos de tablas
+@use '../../sales/history/history.page.scss'; // Reutilizamos la base de estilos de tablas
 
 // Estilos específicos para esta vista
 .product-cell {

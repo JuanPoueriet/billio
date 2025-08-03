@@ -1,6 +1,6 @@
 // Reutilizamos la base de estilos de la vista de historial de ventas
 @use '../../../../assets/styles/forms' as mixins;
-@import '../../sales/history/history.page.scss';
+@use '../../sales/history/history.page.scss';
 
 // Clases específicas para los estados de las facturas
 .status-badge {

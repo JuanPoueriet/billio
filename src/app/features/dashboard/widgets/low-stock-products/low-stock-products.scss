@@ -1,5 +1,5 @@
 @use '../../../../../assets/styles/forms' as mixins;
-@import '../widget-styles.scss';
+@use '../widget-styles.scss';
 
 .widget-content {
   padding: 0; // El padding se maneja en la lista

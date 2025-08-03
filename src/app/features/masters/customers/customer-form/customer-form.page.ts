@@ -7,7 +7,7 @@ import { LucideAngularModule, Save, Building2, User, Mail, Phone, Hash, MapPin }
 @Component({
   selector: 'app-customer-form-page',
   standalone: true,
-  imports: [CommonModule, RouterLink, ReactiveFormsModule, LucideAngularModule],
+  imports: [CommonModule, ReactiveFormsModule, LucideAngularModule],
   templateUrl: './customer-form.page.html',
   styleUrls: ['./customer-form.page.scss'],
   changeDetection: ChangeDetectionStrategy.OnPush,

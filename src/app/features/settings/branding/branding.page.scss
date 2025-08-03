@@ -1,11 +1,11 @@
 @use '../../../../assets/styles/forms' as mixins;
-@import '../company-profile/company-profile.page.scss';
-@import '../../auth/register/steps/step-business/step-business.scss';
+@use '../company-profile/company-profile.page.scss';
+@use '../../auth/register/steps/step-business/step-business.scss';
 
 
 // @use 'src/assets/styles/forms' as mixins;
-// @import '../company-profile/company-profile.page.scss';
-// @import '../../auth/register/steps/step-business/step-business.scss';
+// @use '../company-profile/company-profile.page.scss';
+// @use '../../auth/register/steps/step-business/step-business.scss';
 
 // ... (estilos de color-picker, etc. sin cambios)
 .button-group {

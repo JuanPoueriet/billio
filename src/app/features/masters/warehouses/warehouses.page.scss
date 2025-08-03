@@ -1,6 +1,6 @@
 @use '../../../../assets/styles/view-styles' as views;
 // Reutiliza los estilos de la vista de Taxes
-@import '../taxes/taxes.page.scss';
+@use '../taxes/taxes.page.scss';
 
 // Estilos específicos para esta vista
 .status-badge {

@@ -1,5 +1,5 @@
 @use './../../../../assets/styles/forms' as mixins;
-@import '../../sales/history/history.page.scss'; // Reutiliza estilos de tabla
+@use '../../sales/history/history.page.scss'; // Reutiliza estilos de tabla
 
 // Estilos del Modal
 .modal-overlay {

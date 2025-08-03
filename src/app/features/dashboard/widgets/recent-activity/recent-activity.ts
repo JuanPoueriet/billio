@@ -14,7 +14,7 @@ interface ActivityItem {
 @Component({
   selector: 'app-recent-activity',
   standalone: true,
-  imports: [CommonModule, RouterLink, LucideAngularModule],
+  imports: [CommonModule, LucideAngularModule],
   templateUrl: './recent-activity.html',
   styleUrls: ['./recent-activity.scss'],
   changeDetection: ChangeDetectionStrategy.OnPush,

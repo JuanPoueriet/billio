@@ -2,9 +2,9 @@
 @use '../../../../../assets/styles/forms' as mixins;
 
 // Reutiliza los estilos base de las vistas de cierre y maestros
-@import '../month-end-close/month-end-close.page.scss';
-// @import '../../../masters/suppliers/suppliers.page.scss';
-@import '../../../masters/suppliers/supplier-list/supplier-list.page.scss';
+@use '../month-end-close/month-end-close.page.scss';
+// @use '../../../masters/suppliers/suppliers.page.scss';
+@use '../../../masters/suppliers/supplier-list/supplier-list.page.scss';
 
 .name-cell {
     display: flex;

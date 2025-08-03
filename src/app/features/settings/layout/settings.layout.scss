@@ -1,5 +1,5 @@
 @use '../../../../assets/styles/variables' as *;
-@import '../../sales/history/history.page.scss'; // Reutiliza la base
+@use '../../sales/history/history.page.scss'; // Reutiliza la base
 
 .settings-layout {
     display: grid;
