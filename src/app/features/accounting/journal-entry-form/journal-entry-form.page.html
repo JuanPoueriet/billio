@@ -1,0 +1,65 @@
+<div class="view-container">
+    <form [formGroup]="entryForm" (ngSubmit)="saveEntry()">
+        <div class="view-header">
+            <div class="header-content">
+                <h1>{{ isEditMode() ? t().titleEdit : t().titleNew }}</h1>
+                <p>{{ t().description }}</p>
+            </div>
+            <div class="header-actions">
+                <a routerLink="/app/accounting/journal-entries" class="secondary-button">{{ t().cancel }}</a>
+                <button type="submit" class="primary-button" [disabled]="entryForm.invalid || isSaving()">
+                    <lucide-icon [img]="SaveIcon" size="16"></lucide-icon>
+                    <span>{{ isSaving() ? 'Guardando...' : t().save }}</span>
+                </button>
+            </div>
+        </div>
+
+        <div class="card form-container">
+            <div class="form-grid">
+                <div class="form-field">
+                    <label for="date">{{ t().date }}</label>
+                    <input id="date" type="date" formControlName="date">
+                </div>
+                <div class="form-field full-width">
+                    <label for="description">{{ t().formDescription }}</label>
+                    <input id="description" formControlName="description"
+                        [placeholder]="t().formDescriptionPlaceholder">
+                </div>
+            </div>
+
+            <div class="line-items-section">
+                <table class="data-table" formArrayName="lines">
+                    <thead>
+                        <tr>
+                            <th style="width: 40%;">{{ t().accountColumn }}</th>
+                            <th>{{ t().descriptionColumn }}</th>
+                            <th class="text-right">{{ t().debitColumn }}</th>
+                            <th class="text-right">{{ t().creditColumn }}</th>
+                            <th class="actions-column"></th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr *ngFor="let line of lines.controls; let i = index" [formGroupName]="i">
+                            <td>
+                                <input type="text" formControlName="accountName" [placeholder]="t().accountPlaceholder">
+                            </td>
+                            <td><input type="text" formControlName="description"></td>
+                            <td><input type="number" formControlName="debit" class="text-right" min="0"></td>
+                            <td><input type="number" formControlName="credit" class="text-right" min="0"></td>
+                            <td class="actions-column">
+                                <button type="button" class="icon-button" (click)="removeLine(i)"
+                                    [disabled]="lines.length <= 2">
+                                    <lucide-icon [img]="TrashIcon" size="16"></lucide-icon>
+                                </button>
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+                <button type="button" class="secondary-button add-line-btn" (click)="addLine()">
+                    <lucide-icon [img]="PlusIcon" size="16"></lucide-icon>
+                    <span>{{ t().addLine }}</span>
+                </button>
+            </div>
+        </div>
+    </form>
+</div>

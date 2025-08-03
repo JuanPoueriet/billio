@@ -62,6 +62,16 @@ export const ACCOUNTING_ROUTES: Routes = [
                 loadComponent: () => import('./account-form/account-form.page').then(m => m.AccountFormPage)
             },
             {
+                path: 'journal-entries/new', // <- NUEVA RUTA
+                title: 'New Journal Entry',
+                loadComponent: () => import('./journal-entry-form/journal-entry-form.page').then(m => m.JournalEntryFormPage)
+            },
+            {
+                path: 'journal-entries/:id/edit', // <- NUEVA RUTA
+                title: 'Edit Journal Entry',
+                loadComponent: () => import('./journal-entry-form/journal-entry-form.page').then(m => m.JournalEntryFormPage)
+            },
+            {
                 path: '',
                 redirectTo: 'chart-of-accounts',
                 pathMatch: 'full'

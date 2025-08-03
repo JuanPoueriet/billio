@@ -3,7 +3,7 @@
 import { Injectable, inject, signal, computed } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { Router } from '@angular/router';
-import { Observable, catchError, tap, throwError } from 'rxjs';
+import { Observable, catchError, map, tap, throwError } from 'rxjs';
 import { RegisterPayload } from '../../shared/interfaces/register-payload.interface';
 
 export interface User {
@@ -78,12 +78,24 @@ export class AuthService {
   }
 
   // --- Verificar estado de autenticación con endpoint de estado ---
-  public checkAuthStatus(): void {
+  // public checkAuthStatus(): void {
+  //   const url = `${this.apiUrl}/status`;
+  //   this.http.get<{ user: User }>(url, { withCredentials: true }).subscribe({
+  //     next: (res) => this._currentUser.set(res.user),
+  //     error: () => this._currentUser.set(null)
+  //   });
+  // }
+
+    public checkAuthStatus(): Observable<boolean> {
     const url = `${this.apiUrl}/status`;
-    this.http.get<{ user: User }>(url, { withCredentials: true }).subscribe({
-      next: (res) => this._currentUser.set(res.user),
-      error: () => this._currentUser.set(null)
-    });
+    return this.http.get<{ user: User }>(url, { withCredentials: true }).pipe(
+      tap(res => this._currentUser.set(res.user)), // Actualiza el usuario si tiene éxito
+      map(res => !!res.user), // Emite 'true' si la respuesta tiene un usuario
+      catchError(() => {
+        this._currentUser.set(null); // Limpia el usuario en caso de error
+        return throwError(() => false); // Emite un error con 'false'
+      })
+    );
   }
 
   // --- Manejo de errores mejorado ---

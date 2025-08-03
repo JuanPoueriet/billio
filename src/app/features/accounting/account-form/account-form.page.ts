@@ -3,6 +3,8 @@ import { CommonModule } from '@angular/common';
 import { Router, RouterLink } from '@angular/router';
 import { FormBuilder, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
 import { LucideAngularModule, Save } from 'lucide-angular';
+import { AccountType, AccountCategory } from '../../../core/models/account.model';
+import { ChartOfAccountsService } from '../../../core/services/chart-of-accounts';
 
 @Component({
   selector: 'app-account-form-page',
@@ -13,47 +15,113 @@ import { LucideAngularModule, Save } from 'lucide-angular';
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class AccountFormPage implements OnInit {
-  @Input() id?: string; // Recibe el ID desde la ruta para el modo edición
+  @Input() id?: string;
 
   private fb = inject(FormBuilder);
   private router = inject(Router);
+  private chartOfAccountsService = inject(ChartOfAccountsService);
 
   protected readonly SaveIcon = Save;
 
   accountForm!: FormGroup;
   isEditMode = signal(false);
+  parentAccounts = signal<any[]>([]);
 
-  // Datos simulados para el selector de cuenta padre
-  parentAccounts = signal([
-    { id: '1', code: '1', name: 'Assets' },
-    { id: '1-1', code: '1010', name: 'Cash and Equivalents' },
-    { id: '2', code: '2', name: 'Liabilities' },
-    { id: '3', code: '3', name: 'Equity' },
-  ]);
+  // Arrays de opciones para los selects
+  accountTypeOptions: { value: AccountType, label: string }[] = [];
+  accountCategoryOptions: { value: AccountCategory, label: string }[] = [];
 
   ngOnInit(): void {
     this.accountForm = this.fb.group({
-      accountCode: ['', Validators.required],
-      accountName: ['', Validators.required],
-      accountType: [null, Validators.required],
-      parentAccountId: [null],
+      code: ['', Validators.required],
+      name: ['', Validators.required],
+      type: [null, Validators.required],
+      category: [null, Validators.required],
+      parentId: [null],
       description: [''],
       isActive: [true],
     });
 
+    // Inicializar opciones para los enums
+    this.accountTypeOptions = this.getEnumOptions(AccountType);
+    this.accountCategoryOptions = this.getEnumOptions(AccountCategory);
+
+    this.loadParentAccounts();
+
     if (this.id) {
       this.isEditMode.set(true);
-      // En una aplicación real, aquí se cargan los datos de la cuenta por su ID
-      // y se rellena el formulario con this.accountForm.patchValue(...)
-      console.log('Edit mode for account with ID:', this.id);
+      this.loadAccountData(this.id);
     }
   }
 
-  saveAccount(): void {
-    if (this.accountForm.valid) {
-      console.log('Saving account data:', this.accountForm.value);
-      // Lógica para enviar los datos al backend
-      this.router.navigate(['/app/accounting/chart-of-accounts']);
+  private getEnumOptions<T extends Record<string, any>>(enumObj: T): { value: T[keyof T], label: string }[] {
+    return Object.keys(enumObj)
+      .filter(key => isNaN(Number(key)))
+      .map(key => ({
+        value: enumObj[key] as T[keyof T],
+        label: enumObj[key] as string
+      }));
+  }
+
+  loadParentAccounts(): void {
+    this.chartOfAccountsService.getAccounts().subscribe(accounts => {
+      this.parentAccounts.set(this.flattenForSelect(accounts));
+    });
+  }
+
+  flattenForSelect(accounts: any[], level = 0): any[] {
+    let result: any[] = [];
+    for (const acc of accounts) {
+      result.push({
+        id: acc.id,
+        name: '-'.repeat(level * 2) + ' ' + acc.name,
+        code: acc.code
+      });
+      if (acc.children) {
+        result = result.concat(this.flattenForSelect(acc.children, level + 1));
+      }
     }
+    return result;
+  }
+
+  loadAccountData(id: string): void {
+    this.chartOfAccountsService.getAccountById(id).subscribe(account => {
+      this.accountForm.patchValue({
+        code: account.code,
+        name: account.name,
+        type: account.type,
+        category: account.category,
+        parentId: account.parentId,
+        description: account.description,
+        isActive: account.isActive
+      });
+    });
+  }
+
+  saveAccount(): void {
+    if (this.accountForm.invalid) {
+      this.accountForm.markAllAsTouched();
+      return;
+    }
+
+    const formValue = this.accountForm.value;
+
+    const accountData = {
+      code: formValue.code,
+      name: formValue.name,
+      type: formValue.type,
+      category: formValue.category,
+      parentId: formValue.parentId || undefined, // Convertir null a undefined
+      description: formValue.description,
+      isActive: formValue.isActive,
+    };
+
+    const saveOperation = this.isEditMode() && this.id
+      ? this.chartOfAccountsService.updateAccount(this.id, accountData)
+      : this.chartOfAccountsService.createAccount(accountData);
+
+    saveOperation.subscribe(() => {
+      this.router.navigate(['/app/accounting/chart-of-accounts']);
+    });
   }
 }

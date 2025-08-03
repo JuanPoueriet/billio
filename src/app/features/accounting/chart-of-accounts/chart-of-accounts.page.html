@@ -1,4 +1,4 @@
-<div class="subview-container">
+<!-- <div class="subview-container">
   <div class="subview-header">
     <h3>{{ 'ACCOUNTING.COA.TITLE' | translate }}</h3>
 
@@ -7,8 +7,7 @@
         <lucide-icon [img]="FilterIcon" size="16"></lucide-icon>
         <span>{{ 'ACCOUNTING.COA.ACTIONS.FILTERS' | translate }}</span>
       </button>
-
-      <a routerLink="new" class="primary-button">
+      <a [routerLink]="['./new']" class="primary-button">
         <lucide-icon [img]="PlusCircleIcon" size="16"></lucide-icon>
         <span>{{ 'ACCOUNTING.COA.ACTIONS.NEW_ACCOUNT' | translate }}</span>
       </a>
@@ -29,89 +28,148 @@
 
       <tbody>
         @for(account of accounts(); track account.id) {
-          <tr class="account-row" [class.is-parent]="account.isParent">
-            <td>{{ account.code }}</td>
-            <td>
-              <div class="name-cell" [style.padding-left.rem]="account.level * 1.5">
-                @if(account.isParent) {
-                  <button
-                    class="expand-button icon-button"
-                    (click)="toggleExpand(account)"
-                    [attr.aria-label]="account.isExpanded
+        <tr class="account-row" [class.is-parent]="account.isParent">
+          <td>{{ account.code }}</td>
+          <td>
+            <div class="name-cell" [style.padding-left.rem]="account.level * 1.5">
+              @if(account.isParent) {
+              <button class="expand-button icon-button" (click)="toggleExpand(account)" [attr.aria-label]="account.isExpanded
                       ? ('ACCOUNTING.COA.ARIA.COLLAPSE_ROW' | translate)
                       : ('ACCOUNTING.COA.ARIA.EXPAND_ROW' | translate)">
-                    <lucide-icon
-                      [img]="account.isExpanded ? ChevronDownIcon : ChevronRightIcon"
-                      size="16">
-                    </lucide-icon>
-                  </button>
-                }
-                <a href="#" class="table-link">{{ account.name }}</a>
-              </div>
-            </td>
-            <td>{{ account.type }}</td>
-            <td class="text-right">{{ account.balance | number:'1.2-2' }}</td>
-            <td class="actions-column">
-              <button class="icon-button" [attr.aria-label]="'ACCOUNTING.COA.ARIA.MORE_ACTIONS' | translate">
-                <lucide-icon [img]="MoreHorizontalIcon" size="18"></lucide-icon>
+                <lucide-icon [img]="account.isExpanded ? ChevronDownIcon : ChevronRightIcon" size="16">
+                </lucide-icon>
               </button>
-            </td>
-          </tr>
+              }
+              <a href="#" class="table-link">{{ account.name }}</a>
+            </div>
+          </td>
+          <td>{{ account.type }}</td>
+          <td class="text-right">{{ account.balance | number:'1.2-2' }}</td>
+          <td class="actions-column">
+            <button class="icon-button" [attr.aria-label]="'ACCOUNTING.COA.ARIA.MORE_ACTIONS' | translate">
+              <lucide-icon [img]="MoreHorizontalIcon" size="18"></lucide-icon>
+            </button>
+          </td>
+        </tr>
 
-          @if(account.isExpanded && account.children) {
-            @for(child of account.children; track child.id) {
-              <tr class="account-row" [class.is-parent]="child.isParent">
-                <td>{{ child.code }}</td>
-                <td>
-                  <div class="name-cell" [style.padding-left.rem]="child.level * 1.5">
-                    @if(child.isParent) {
-                      <button
-                        class="expand-button icon-button"
-                        (click)="toggleExpand(child)"
-                        [attr.aria-label]="child.isExpanded
+        @if(account.isExpanded && account.children) {
+        @for(child of account.children; track child.id) {
+        <tr class="account-row" [class.is-parent]="child.isParent">
+          <td>{{ child.code }}</td>
+          <td>
+            <div class="name-cell" [style.padding-left.rem]="child.level * 1.5">
+              @if(child.isParent) {
+              <button class="expand-button icon-button" (click)="toggleExpand(child)" [attr.aria-label]="child.isExpanded
                           ? ('ACCOUNTING.COA.ARIA.COLLAPSE_ROW' | translate)
                           : ('ACCOUNTING.COA.ARIA.EXPAND_ROW' | translate)">
-                        <lucide-icon
-                          [img]="child.isExpanded ? ChevronDownIcon : ChevronRightIcon"
-                          size="16">
-                        </lucide-icon>
-                      </button>
-                    }
-                    <a href="#" class="table-link">{{ child.name }}</a>
-                  </div>
-                </td>
-                <td>{{ child.type }}</td>
-                <td class="text-right">{{ child.balance | number:'1.2-2' }}</td>
-                <td class="actions-column">
-                  <button class="icon-button" [attr.aria-label]="'ACCOUNTING.COA.ARIA.MORE_ACTIONS' | translate">
-                    <lucide-icon [img]="MoreHorizontalIcon" size="18"></lucide-icon>
-                  </button>
-                </td>
-              </tr>
-
-              @if(child.isExpanded && child.children) {
-                @for(grandchild of child.children; track grandchild.id) {
-                  <tr class="account-row">
-                    <td>{{ grandchild.code }}</td>
-                    <td>
-                      <div class="name-cell" [style.padding-left.rem]="grandchild.level * 1.5">
-                        <a href="#" class="table-link">{{ grandchild.name }}</a>
-                      </div>
-                    </td>
-                    <td>{{ grandchild.type }}</td>
-                    <td class="text-right">{{ grandchild.balance | number:'1.2-2' }}</td>
-                    <td class="actions-column">
-                      <button class="icon-button" [attr.aria-label]="'ACCOUNTING.COA.ARIA.MORE_ACTIONS' | translate">
-                        <lucide-icon [img]="MoreHorizontalIcon" size="18"></lucide-icon>
-                      </button>
-                    </td>
-                  </tr>
-                }
+                <lucide-icon [img]="child.isExpanded ? ChevronDownIcon : ChevronRightIcon" size="16">
+                </lucide-icon>
+              </button>
               }
-            }
-          }
+              <a href="#" class="table-link">{{ child.name }}</a>
+            </div>
+          </td>
+          <td>{{ child.type }}</td>
+          <td class="text-right">{{ child.balance | number:'1.2-2' }}</td>
+          <td class="actions-column">
+            <button class="icon-button" [attr.aria-label]="'ACCOUNTING.COA.ARIA.MORE_ACTIONS' | translate">
+              <lucide-icon [img]="MoreHorizontalIcon" size="18"></lucide-icon>
+            </button>
+          </td>
+        </tr>
+
+        @if(child.isExpanded && child.children) {
+        @for(grandchild of child.children; track grandchild.id) {
+        <tr class="account-row">
+          <td>{{ grandchild.code }}</td>
+          <td>
+            <div class="name-cell" [style.padding-left.rem]="grandchild.level * 1.5">
+              <a href="#" class="table-link">{{ grandchild.name }}</a>
+            </div>
+          </td>
+          <td>{{ grandchild.type }}</td>
+          <td class="text-right">{{ grandchild.balance | number:'1.2-2' }}</td>
+          <td class="actions-column">
+            <button class="icon-button" [attr.aria-label]="'ACCOUNTING.COA.ARIA.MORE_ACTIONS' | translate">
+              <lucide-icon [img]="MoreHorizontalIcon" size="18"></lucide-icon>
+            </button>
+          </td>
+        </tr>
+        }
+        }
+        }
+        }
         }
       </tbody>
     </table>
   </div>
-</div>
+</div> -->
+
+
+<!-- src/app/features/accounting/chart-of-accounts/chart-of-accounts.page.html -->
+
+<header class="page-header">
+  <h1 class="page-title">Chart of Accounts</h1>
+  <a routerLink="/app/accounting/chart-of-accounts/new" class="btn btn-primary">
+    <span>+</span> New Account
+  </a>
+</header>
+
+<main class="page-content">
+  @if (state().loading) {
+  <div class="loading-indicator">
+    <div class="spinner"></div>
+    <p>Loading accounts...</p>
+  </div>
+  } @else if (state().error) {
+  <div class="error-message">
+    <p>{{ state().error }}</p>
+    <button class="btn btn-secondary" (click)="loadAccounts()">Retry</button>
+  </div>
+  } @else {
+  <div class="table-container">
+    @if (flattenedAccounts().length === 0) {
+    <div class="empty-state">
+      <h2>No accounts found</h2>
+      <p>Get started by creating your first account.</p>
+      <a routerLink="/app/accounting/chart-of-accounts/new" class="btn btn-primary">Create Account</a>
+    </div>
+    } @else {
+    <table class="data-table">
+      <thead>
+        <tr>
+          <th class="col-code">Code</th>
+          <th class="col-name">Name</th>
+          <th class="col-type">Type</th>
+          <th class="col-balance">Balance</th>
+          <th class="col-actions">Actions</th>
+        </tr>
+      </thead>
+      <tbody>
+        @for (account of flattenedAccounts(); track account.id) {
+        <tr>
+          <td class="col-code" [style.padding-left.px]="16 + account.level * 24">
+            {{ account.code }}
+          </td>
+          <td class="col-name">
+            <div class="name-text">{{ account.name }}</div>
+            <div class="category-text">{{ getAccountCategoryTranslation(account.category) }}</div>
+          </td>
+          <td class="col-type">
+            <span class="chip">{{ getAccountTypeTranslation(account.type) }}</span>
+          </td>
+          <td class="col-balance" [ngClass]="{'negative-balance': account.balance < 0}">
+            {{ account.balance | currency }}
+          </td>
+          <td class="col-actions">
+            <a [routerLink]="['/app/accounting/chart-of-accounts', account.id, 'edit']" class="btn-icon">
+            </a>
+          </td>
+        </tr>
+        }
+      </tbody>
+    </table>
+    }
+  </div>
+  }
+</main>

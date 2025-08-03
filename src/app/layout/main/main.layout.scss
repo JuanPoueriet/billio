@@ -403,6 +403,8 @@
 
 .user-menu-dropdown {
   position: absolute;
+  display: flex;
+  flex-direction: column;
   top: calc(100% + 8px);
   right: 0;
   width: 260px;
@@ -419,6 +421,8 @@
   .dropdown-header {
     padding: 1rem;
     border-bottom: 1px solid var(--border-color);
+    display: flex;
+    flex-direction: column;
 
     .user-name {
       font-size: 0.9rem;
