@@ -1,110 +1,198 @@
-// src/app/features/accounting/chart-of-accounts/chart-of-accounts.page.ts
-
-import { Component, OnInit, inject, signal, computed } from '@angular/core';
-import { CommonModule, CurrencyPipe } from '@angular/common';
+import { 
+  Component, 
+  inject, 
+  OnInit, 
+  OnDestroy, 
+  DestroyRef, 
+  computed,
+  Signal
+} from '@angular/core';
+import { CommonModule } from '@angular/common';
 import { Router, RouterLink } from '@angular/router';
-import { take } from 'rxjs';
-import { Account, AccountType, AccountTypeTranslations, AccountCategory, AccountCategoryTranslations } from '../../../core/models/account.model';
-import { ChartOfAccountsService } from '../../../core/services/chart-of-accounts';
-import { LanguageService } from '../../../core/services/language';
-
-// import { ChartOfAccountsService } from 'src/app/core/services/chart-of-accounts.service';
-// import { LanguageService } from 'src/app/core/services/language.service';
-// import {
-//   Account,
-//   AccountCategory,
-//   AccountCategoryTranslations,
-//   AccountType,
-//   AccountTypeTranslations,
-//   Language,
-// } from 'src/app/core/models/account.model';
-
-interface State {
-  accounts: Account[];
-  loading: boolean;
-  error: string | null;
-}
+import { ChartOfAccountsStateService } from '../../../core/state/chart-of-accounts.state';
+import { 
+  AccountType, 
+  AccountTypeTranslations 
+} from '../../../core/models/account.model';
+import { FlattenedAccount } from '../../../core/models/flattened-account.model';
+import { 
+  LucideAngularModule, 
+  ChevronDown, 
+  ChevronRight, 
+  Edit, 
+  PlusCircle, 
+  RefreshCw, 
+  ArrowDown, 
+  ArrowUp, 
+  AlertCircle, 
+  FileSearch, 
+  Search
+} from 'lucide-angular';
+import { FormsModule } from '@angular/forms';
+import { toObservable } from '@angular/core/rxjs-interop';
 
 @Component({
   selector: 'app-chart-of-accounts',
   templateUrl: './chart-of-accounts.page.html',
   styleUrls: ['./chart-of-accounts.page.scss'],
   standalone: true,
-  imports: [CommonModule, RouterLink, CurrencyPipe],
+  imports: [CommonModule, LucideAngularModule, FormsModule],
 })
-export class ChartOfAccountsPage implements OnInit {
-  private chartOfAccountsService = inject(ChartOfAccountsService);
-  private languageService = inject(LanguageService);
+export class ChartOfAccountsPage implements OnInit, OnDestroy {
+  // Servicios inyectados
+  public state = inject(ChartOfAccountsStateService);
   private router = inject(Router);
+  private destroyRef = inject(DestroyRef);
 
-  public state = signal<State>({
-    accounts: [],
-    loading: true,
-    error: null,
+  // Iconos
+  protected readonly ChevronDownIcon = ChevronDown;
+  protected readonly ChevronRightIcon = ChevronRight;
+  protected readonly EditIcon = Edit;
+  protected readonly PlusCircleIcon = PlusCircle;
+  protected readonly RefreshIcon = RefreshCw;
+  protected readonly ExpandAllIcon = ArrowDown;
+  protected readonly CollapseAllIcon = ArrowUp;
+  protected readonly AlertCircleIcon = AlertCircle;
+  protected readonly FileSearchIcon = FileSearch;
+  protected readonly SearchIcon = Search;
+
+  // Estado expuesto desde el servicio
+  public displayAccounts: Signal<FlattenedAccount[]> = this.state.displayAccounts;
+  public loading: Signal<boolean> = this.state.loading;
+  public error: Signal<string | null> = this.state.error;
+  public accountTypeTranslations = AccountTypeTranslations;
+  public accountTypes = Object.values(AccountType);
+  
+  // Variables locales para filtros
+  public searchInput = '';
+  public selectedType: AccountType | 'all' = 'all';
+
+  // Estado de carga para acciones
+  public reloading = false;
+  public expandingAll = false;
+  public collapsingAll = false;
+
+  // Computed: Verifica si hay cuentas para mostrar
+  public hasAccountsToDisplay = computed(() => {
+    return !this.loading() && !this.error() && this.displayAccounts().length > 0;
   });
 
-  // El 'computed' para aplanar las cuentas sigue siendo útil.
-  public flattenedAccounts = computed(() => this.flattenTree(this.state().accounts, 0));
+  // Computed: Verifica si el estado está vacío
+  public isEmptyState = computed(() => {
+    return !this.loading() && !this.error() && this.displayAccounts().length === 0;
+  });
 
-  constructor() {}
+  constructor() {
+    // Convertir señales a observables
+    const searchQuery$ = toObservable(this.state.searchQuery);
+    const selectedType$ = toObservable(this.state.selectedType);
 
-  ngOnInit() {
-    this.loadAccounts();
+    // Sincronizar estado de búsqueda (con tipado explícito)
+    searchQuery$.subscribe((query: string) => {
+      this.searchInput = query;
+    });
+
+    // Sincronizar tipo seleccionado (con tipado explícito)
+    selectedType$.subscribe((type: AccountType | 'all') => {
+      this.selectedType = type;
+    });
   }
 
-  ionViewWillEnter() {
-    this.loadAccounts();
+  ngOnInit(): void {
+    // No es necesario hacer nada adicional aquí
   }
 
-  loadAccounts() {
-    this.state.update((s) => ({ ...s, loading: true, error: null }));
-    this.chartOfAccountsService
-      .getAccounts()
-      .pipe(take(1))
-      .subscribe({
-        next: (accounts) => {
-          this.state.set({ accounts, loading: false, error: null });
-        },
-        error: (err) => {
-          console.error('Error fetching accounts:', err);
-          this.state.set({
-            accounts: [],
-            loading: false,
-            error: 'Failed to load accounts. Please try again.',
-          });
-        },
-      });
+  // Métodos de UI
+  onSearchInput(): void {
+    this.state.setSearchQuery(this.searchInput);
   }
 
-  goToNewAccountForm() {
-    this.router.navigate(['/tabs/accounting/account-form']);
+  onTypeChange(): void {
+    this.state.setSelectedType(this.selectedType);
   }
 
-  private flattenTree(accounts: Account[], level: number): (Account & { level: number })[] {
-    let flattened: (Account & { level: number })[] = [];
-    for (const account of accounts) {
-      flattened.push({ ...account, level });
-      if (account.children && account.children.length > 0) {
-        flattened = flattened.concat(this.flattenTree(account.children, level + 1));
-      }
+  toggleExpand(accountId: string): void {
+    this.state.toggleExpand(accountId);
+  }
+
+  reloadAccounts(): void {
+    this.reloading = true;
+    this.state.loadAccounts();
+    
+    // Simular tiempo de espera para feedback visual
+    setTimeout(() => {
+      this.reloading = false;
+    }, 1000);
+  }
+
+  expandAll(): void {
+    this.expandingAll = true;
+    this.state.expandAll();
+    
+    // Feedback visual
+    setTimeout(() => {
+      this.expandingAll = false;
+    }, 500);
+  }
+
+  collapseAll(): void {
+    this.collapsingAll = true;
+    this.state.collapseAll();
+    
+    // Feedback visual
+    setTimeout(() => {
+      this.collapsingAll = false;
+    }, 500);
+  }
+
+  navigateToEdit(accountId: string, event?: Event): void {
+    if (event) {
+      event.stopPropagation();
     }
-    return flattened;
+    this.router.navigate(['/app/accounting/chart-of-accounts', accountId, 'edit']);
   }
 
-  /**
-   * CORRECCIÓN: Obtenemos el idioma directamente desde el servicio.
-   * Esto asegura que TypeScript siempre vea el tipo correcto ('en' | 'es').
-   */
-  getAccountTypeTranslation(type: AccountType): string {
-    const lang = this.languageService.currentLang();
-    return AccountTypeTranslations[type][lang];
+  navigateToCreate(): void {
+    this.router.navigate(['/app/accounting/chart-of-accounts/new']);
   }
 
-  /**
-   * CORRECCIÓN: Hacemos lo mismo para la categoría.
-   */
-  getAccountCategoryTranslation(category: AccountCategory): string {
-    const lang = this.languageService.currentLang();
-    return AccountCategoryTranslations[category][lang];
+  // Obtener jerarquía visual para indicadores
+  getHierarchyLines(level: number): { vertical: boolean; horizontal: boolean }[] {
+    const lines: { vertical: boolean; horizontal: boolean }[] = [];
+    
+    // Solo para niveles mayores a 0
+    if (level > 0) {
+      // Añadir línea vertical para cada nivel
+      for (let i = 1; i < level; i++) {
+        lines.push({ vertical: true, horizontal: false });
+      }
+      
+      // Añadir línea horizontal para el último nivel
+      lines.push({ vertical: false, horizontal: true });
+    }
+    
+    return lines;
+  }
+
+  // Manejar clic en fila
+  onRowClick(accountId: string, hasChildren: boolean, event?: Event): void {
+    if (event) {
+      event.stopPropagation();
+    }
+    
+    if (hasChildren) {
+      this.toggleExpand(accountId);
+    } else {
+      this.navigateToEdit(accountId);
+    }
+  }
+
+  ngOnDestroy(): void {
+    // No es necesario limpieza manual
+  }
+
+  // TrackBy para optimización de rendimiento
+  trackByAccountId(index: number, account: FlattenedAccount): string {
+    return account.id;
   }
 }

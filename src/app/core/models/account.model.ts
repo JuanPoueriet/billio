@@ -74,8 +74,7 @@ export type Language = 'en' | 'es';
 export type TranslationMap = { [key in Language]: string };
 
 // 3. Aplicar los tipos corregidos a los objetos de traducción
-// export const AccountTypeTranslations: { [key in AccountType]: TranslationMap } = {
-export const AccountTypeTranslations: any = {
+export const AccountTypeTranslations: { [key in AccountType]: TranslationMap } = {
   [AccountType.ASSET]: { en: 'Asset', es: 'Activo' },
   [AccountType.LIABILITY]: { en: 'Liability', es: 'Pasivo' },
   [AccountType.EQUITY]: { en: 'Equity', es: 'Patrimonio' },
@@ -83,8 +82,7 @@ export const AccountTypeTranslations: any = {
   [AccountType.EXPENSE]: { en: 'Expense', es: 'Gastos' },
 };
 
-// export const AccountCategoryTranslations: { [key in AccountCategory]: TranslationMap } = {
-export const AccountCategoryTranslations: any = {
+export const AccountCategoryTranslations: { [key in AccountCategory]: TranslationMap } = {
   [AccountCategory.CURRENT_ASSET]: { en: 'Current Asset', es: 'Activo Corriente' },
   [AccountCategory.NON_CURRENT_ASSET]: { en: 'Non-Current Asset', es: 'Activo No Corriente' },
   [AccountCategory.CURRENT_LIABILITY]: { en: 'Current Liability', es: 'Pasivo Corriente' },

@@ -1,68 +1,166 @@
-<div class="view-container">
+<div class="view-container" [class.dark-theme]="themeMode() === 'dark'">
     <form [formGroup]="accountForm" (ngSubmit)="saveAccount()">
         <div class="view-header">
             <div class="header-content">
-                <h1>{{ isEditMode() ? 'Edit Account' : 'New Account' }}</h1>
-                <p>Define the details of the general ledger account.</p>
+                <h1>{{ isEditMode ? 'Edit Account' : 'Create New Account' }}</h1>
+                <p>{{ isEditMode ? 'Modify the details of this account' : 'Define the properties of your new account' }}
+                </p>
             </div>
             <div class="header-actions">
-                <a routerLink="/app/accounting/chart-of-accounts" class="secondary-button">Cancel</a>
-                <button type="submit" class="primary-button" [disabled]="accountForm.invalid">
+                <a routerLink="/app/accounting/chart-of-accounts" class="secondary-button">
+                    <lucide-icon [img]="CancelIcon" size="16"></lucide-icon>
+                    <span>Cancel</span>
+                </a>
+                <button type="submit" class="primary-button" [disabled]="accountForm.invalid || saving">
+                    @if (saving) {
+                    <lucide-icon [img]="LoaderIcon" size="16" class="spinning"></lucide-icon>
+                    } @else {
                     <lucide-icon [img]="SaveIcon" size="16"></lucide-icon>
-                    <span>Save Account</span>
+                    }
+                    <span>{{ isEditMode ? 'Update Account' : 'Create Account' }}</span>
                 </button>
             </div>
         </div>
 
+        @if (loading) {
+        <div class="loading-overlay">
+            <lucide-icon [img]="LoaderIcon" size="32" class="spinning"></lucide-icon>
+            <p>Loading account data...</p>
+        </div>
+        }
+
         <div class="form-container card">
             <div class="form-section">
                 <div class="form-grid">
+                    <!-- Campo: Código -->
                     <div class="form-field">
-                        <label for="code">Account Code*</label>
-                        <input id="code" formControlName="code" placeholder="e.g., 1010-03">
+                        <label for="code">Account Code *</label>
+                        <input id="code" type="text" formControlName="code" placeholder="e.g., 1010.01"
+                            [class.invalid]="accountForm.get('code')?.invalid && accountForm.get('code')?.touched">
+                        @if (accountForm.get('code')?.invalid && accountForm.get('code')?.touched) {
+                        <div class="error-message">
+                            @if (accountForm.get('code')?.errors?.['required']) {
+                            <p>Account code is required</p>
+                            }
+                            @if (accountForm.get('code')?.errors?.['pattern']) {
+                            <p>Code must be a numeric hierarchy (e.g., 1010.01)</p>
+                            }
+                            @if (accountForm.get('code')?.errors?.['maxlength']) {
+                            <p>Code cannot exceed 20 characters</p>
+                            }
+                        </div>
+                        }
                     </div>
+
+                    <!-- Campo: Nombre -->
                     <div class="form-field">
-                        <label for="name">Account Name*</label>
-                        <input id="name" formControlName="name" placeholder="e.g., Savings Account">
+                        <label for="name">Account Name *</label>
+                        <input id="name" type="text" formControlName="name" placeholder="e.g., Cash in Bank"
+                            [class.invalid]="accountForm.get('name')?.invalid && accountForm.get('name')?.touched">
+                        @if (accountForm.get('name')?.invalid && accountForm.get('name')?.touched) {
+                        <div class="error-message">
+                            @if (accountForm.get('name')?.errors?.['required']) {
+                            <p>Account name is required</p>
+                            }
+                            @if (accountForm.get('name')?.errors?.['maxlength']) {
+                            <p>Name cannot exceed 100 characters</p>
+                            }
+                        </div>
+                        }
                     </div>
+
+                    <!-- Campo: Tipo de Cuenta -->
                     <div class="form-field">
-                        <label for="type">Account Type*</label>
-                        <select id="type" formControlName="type">
-                            <option [value]="null" disabled>Select a type...</option>
+                        <label for="type">Account Type *</label>
+                        <select id="type" formControlName="type"
+                            [class.invalid]="accountForm.get('type')?.invalid && accountForm.get('type')?.touched">
+                            <option value="" disabled>Select Account Type</option>
                             @for (option of accountTypeOptions; track option.value) {
-                            <option [value]="option.value">{{ option.label }}</option>
+                            <option [value]="option.value">{{ option.value }}</option>
                             }
                         </select>
+                        @if (accountForm.get('type')?.invalid && accountForm.get('type')?.touched) {
+                        <div class="error-message">
+                            <p>Account type is required</p>
+                        </div>
+                        }
                     </div>
+
+                    <!-- Campo: Categoría de Cuenta -->
                     <div class="form-field">
-                        <label for="category">Account Category*</label>
-                        <select id="category" formControlName="category">
-                            <option [value]="null" disabled>Select a category...</option>
+                        <label for="category">Account Category *</label>
+                        <select id="category" formControlName="category" [disabled]="!accountForm.get('type')?.value"
+                            [class.invalid]="accountForm.get('category')?.invalid && accountForm.get('category')?.touched">
+                            <option value="" disabled>Select Account Category</option>
                             @for (option of accountCategoryOptions; track option.value) {
                             <option [value]="option.value">{{ option.label }}</option>
                             }
                         </select>
+                        @if (accountForm.get('category')?.invalid && accountForm.get('category')?.touched) {
+                        <div class="error-message">
+                            <p>Account category is required</p>
+                        </div>
+                        }
                     </div>
+
+                    <!-- Campo: Cuenta Padre -->
                     <div class="form-field">
                         <label for="parentId">Parent Account</label>
-                        <select id="parentId" formControlName="parentId">
-                            <option [value]="null">None (Top Level Account)</option>
-                            @for (account of parentAccounts(); track account.id) {
-                            <option [value]="account.id">{{ account.code }} - {{ account.name }}</option>
+                        <div class="custom-select">
+                            <div class="select-header"
+                                [class.invalid]="accountForm.get('parentId')?.invalid && accountForm.get('parentId')?.touched"
+                                (click)="toggleParentDropdown()">
+                                <span>{{ getSelectedParentDisplay() }}</span>
+                                <lucide-icon [img]="showParentDropdown ? ChevronUpIcon : ChevronDownIcon"
+                                    size="16"></lucide-icon>
+                            </div>
+                            @if (showParentDropdown) {
+                            <div class="select-dropdown">
+                                <div class="search-box">
+                                    <input type="text" placeholder="Search parent accounts..."
+                                        [(ngModel)]="parentSearchQuery" (ngModelChange)="filterParentAccounts()">
+                                </div>
+                                <div class="dropdown-item" (click)="selectParentAccount(null)">
+                                    <span>None (Top Level Account)</span>
+                                </div>
+                                @for (parent of filteredParentAccounts; track parent.id) {
+                                <div class="dropdown-item" [class.disabled]="parent.isDisabled"
+                                    (click)="!parent.isDisabled && selectParentAccount(parent)">
+                                    <span>{{ parent.code }} - {{ parent.name }}</span>
+                                    @if (parent.isDisabled) {
+                                    <span class="badge">Current Account</span>
+                                    }
+                                </div>
+                                }
+                                @if (filteredParentAccounts.length === 0) {
+                                <div class="dropdown-item empty">
+                                    <span>No matching accounts found</span>
+                                </div>
+                                }
+                            </div>
                             }
-                        </select>
+                        </div>
                     </div>
+
+                    <!-- Campo: Activo -->
                     <div class="form-field">
                         <label for="isActive">Active</label>
-                        <label class="toggle">
+                        <label class="toggle-switch">
                             <input type="checkbox" id="isActive" formControlName="isActive">
                             <span class="slider"></span>
                         </label>
                     </div>
+
+                    <!-- Campo: Descripción -->
                     <div class="form-field full-width">
                         <label for="description">Description</label>
                         <textarea id="description" formControlName="description" rows="3"
-                            placeholder="Add an internal note or description for this account..."></textarea>
+                            placeholder="Add a detailed description for this account..."></textarea>
+                        @if (accountForm.get('description')?.errors?.['maxlength']) {
+                        <div class="error-message">
+                            <p>Description cannot exceed 500 characters</p>
+                        </div>
+                        }
                     </div>
                 </div>
             </div>

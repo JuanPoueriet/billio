@@ -1,175 +1,154 @@
-<!-- <div class="subview-container">
-  <div class="subview-header">
-    <h3>{{ 'ACCOUNTING.COA.TITLE' | translate }}</h3>
+<header class="page-header">
+  <div class="header-left">
+    <h1 class="page-title">Plan de Cuentas</h1>
 
-    <div class="header-actions">
-      <button class="secondary-button" [attr.aria-label]="'ACCOUNTING.COA.ACTIONS.FILTERS' | translate">
-        <lucide-icon [img]="FilterIcon" size="16"></lucide-icon>
-        <span>{{ 'ACCOUNTING.COA.ACTIONS.FILTERS' | translate }}</span>
+    <div class="action-buttons">
+      <!-- Botón de recargar -->
+      <button class="btn-icon" (click)="reloadAccounts()" [disabled]="reloading" title="Recargar">
+        <lucide-icon [img]="RefreshIcon" [class.spinning]="reloading" size="20">
+        </lucide-icon>
       </button>
-      <a [routerLink]="['./new']" class="primary-button">
-        <lucide-icon [img]="PlusCircleIcon" size="16"></lucide-icon>
-        <span>{{ 'ACCOUNTING.COA.ACTIONS.NEW_ACCOUNT' | translate }}</span>
-      </a>
+
+      <!-- Botón de expandir todo -->
+      <button class="btn-icon" (click)="expandAll()" [disabled]="expandingAll" title="Expandir todo">
+        <lucide-icon [img]="ExpandAllIcon" size="20"></lucide-icon>
+      </button>
+
+      <!-- Botón de colapsar todo -->
+      <button class="btn-icon" (click)="collapseAll()" [disabled]="collapsingAll" title="Colapsar todo">
+        <lucide-icon [img]="CollapseAllIcon" size="20"></lucide-icon>
+      </button>
     </div>
   </div>
 
-  <div class="table-container card">
-    <table class="data-table tree-table">
-      <thead>
-        <tr>
-          <th>{{ 'ACCOUNTING.COA.TABLE.HEADERS.CODE' | translate }}</th>
-          <th>{{ 'ACCOUNTING.COA.TABLE.HEADERS.ACCOUNT_NAME' | translate }}</th>
-          <th>{{ 'ACCOUNTING.COA.TABLE.HEADERS.TYPE' | translate }}</th>
-          <th class="text-right">{{ 'ACCOUNTING.COA.TABLE.HEADERS.BALANCE' | translate }}</th>
-          <th class="actions-column">{{ 'ACCOUNTING.COA.TABLE.HEADERS.ACTIONS' | translate }}</th>
-        </tr>
-      </thead>
-
-      <tbody>
-        @for(account of accounts(); track account.id) {
-        <tr class="account-row" [class.is-parent]="account.isParent">
-          <td>{{ account.code }}</td>
-          <td>
-            <div class="name-cell" [style.padding-left.rem]="account.level * 1.5">
-              @if(account.isParent) {
-              <button class="expand-button icon-button" (click)="toggleExpand(account)" [attr.aria-label]="account.isExpanded
-                      ? ('ACCOUNTING.COA.ARIA.COLLAPSE_ROW' | translate)
-                      : ('ACCOUNTING.COA.ARIA.EXPAND_ROW' | translate)">
-                <lucide-icon [img]="account.isExpanded ? ChevronDownIcon : ChevronRightIcon" size="16">
-                </lucide-icon>
-              </button>
-              }
-              <a href="#" class="table-link">{{ account.name }}</a>
-            </div>
-          </td>
-          <td>{{ account.type }}</td>
-          <td class="text-right">{{ account.balance | number:'1.2-2' }}</td>
-          <td class="actions-column">
-            <button class="icon-button" [attr.aria-label]="'ACCOUNTING.COA.ARIA.MORE_ACTIONS' | translate">
-              <lucide-icon [img]="MoreHorizontalIcon" size="18"></lucide-icon>
-            </button>
-          </td>
-        </tr>
-
-        @if(account.isExpanded && account.children) {
-        @for(child of account.children; track child.id) {
-        <tr class="account-row" [class.is-parent]="child.isParent">
-          <td>{{ child.code }}</td>
-          <td>
-            <div class="name-cell" [style.padding-left.rem]="child.level * 1.5">
-              @if(child.isParent) {
-              <button class="expand-button icon-button" (click)="toggleExpand(child)" [attr.aria-label]="child.isExpanded
-                          ? ('ACCOUNTING.COA.ARIA.COLLAPSE_ROW' | translate)
-                          : ('ACCOUNTING.COA.ARIA.EXPAND_ROW' | translate)">
-                <lucide-icon [img]="child.isExpanded ? ChevronDownIcon : ChevronRightIcon" size="16">
-                </lucide-icon>
-              </button>
-              }
-              <a href="#" class="table-link">{{ child.name }}</a>
-            </div>
-          </td>
-          <td>{{ child.type }}</td>
-          <td class="text-right">{{ child.balance | number:'1.2-2' }}</td>
-          <td class="actions-column">
-            <button class="icon-button" [attr.aria-label]="'ACCOUNTING.COA.ARIA.MORE_ACTIONS' | translate">
-              <lucide-icon [img]="MoreHorizontalIcon" size="18"></lucide-icon>
-            </button>
-          </td>
-        </tr>
-
-        @if(child.isExpanded && child.children) {
-        @for(grandchild of child.children; track grandchild.id) {
-        <tr class="account-row">
-          <td>{{ grandchild.code }}</td>
-          <td>
-            <div class="name-cell" [style.padding-left.rem]="grandchild.level * 1.5">
-              <a href="#" class="table-link">{{ grandchild.name }}</a>
-            </div>
-          </td>
-          <td>{{ grandchild.type }}</td>
-          <td class="text-right">{{ grandchild.balance | number:'1.2-2' }}</td>
-          <td class="actions-column">
-            <button class="icon-button" [attr.aria-label]="'ACCOUNTING.COA.ARIA.MORE_ACTIONS' | translate">
-              <lucide-icon [img]="MoreHorizontalIcon" size="18"></lucide-icon>
-            </button>
-          </td>
-        </tr>
-        }
-        }
-        }
-        }
-        }
-      </tbody>
-    </table>
+  <div class="header-right">
+    <!-- Botón para crear nueva cuenta -->
+    <button class="btn-primary" (click)="navigateToCreate()">
+      <lucide-icon [img]="PlusCircleIcon" size="16"></lucide-icon>
+      <span>Nueva Cuenta</span>
+    </button>
   </div>
-</div> -->
-
-
-<!-- src/app/features/accounting/chart-of-accounts/chart-of-accounts.page.html -->
-
-<header class="page-header">
-  <h1 class="page-title">Chart of Accounts</h1>
-  <a routerLink="/app/accounting/chart-of-accounts/new" class="btn btn-primary">
-    <span>+</span> New Account
-  </a>
 </header>
 
-<main class="page-content">
-  @if (state().loading) {
-  <div class="loading-indicator">
-    <div class="spinner"></div>
-    <p>Loading accounts...</p>
-  </div>
-  } @else if (state().error) {
-  <div class="error-message">
-    <p>{{ state().error }}</p>
-    <button class="btn btn-secondary" (click)="loadAccounts()">Retry</button>
-  </div>
-  } @else {
-  <div class="table-container">
-    @if (flattenedAccounts().length === 0) {
-    <div class="empty-state">
-      <h2>No accounts found</h2>
-      <p>Get started by creating your first account.</p>
-      <a routerLink="/app/accounting/chart-of-accounts/new" class="btn btn-primary">Create Account</a>
+<section class="controls-section">
+  <div class="search-filter">
+    <!-- Caja de búsqueda -->
+    <div class="search-box">
+      <lucide-icon [img]="SearchIcon" size="18"></lucide-icon>
+      <input type="text" placeholder="Buscar por código o nombre..." [ngModel]="searchInput"
+        (ngModelChange)="onSearchInput()" aria-label="Buscar cuentas">
     </div>
-    } @else {
-    <table class="data-table">
-      <thead>
-        <tr>
-          <th class="col-code">Code</th>
-          <th class="col-name">Name</th>
-          <th class="col-type">Type</th>
-          <th class="col-balance">Balance</th>
-          <th class="col-actions">Actions</th>
-        </tr>
-      </thead>
-      <tbody>
-        @for (account of flattenedAccounts(); track account.id) {
-        <tr>
-          <td class="col-code" [style.padding-left.px]="16 + account.level * 24">
-            {{ account.code }}
-          </td>
-          <td class="col-name">
-            <div class="name-text">{{ account.name }}</div>
-            <div class="category-text">{{ getAccountCategoryTranslation(account.category) }}</div>
-          </td>
-          <td class="col-type">
-            <span class="chip">{{ getAccountTypeTranslation(account.type) }}</span>
-          </td>
-          <td class="col-balance" [ngClass]="{'negative-balance': account.balance < 0}">
-            {{ account.balance | currency }}
-          </td>
-          <td class="col-actions">
-            <a [routerLink]="['/app/accounting/chart-of-accounts', account.id, 'edit']" class="btn-icon">
-            </a>
-          </td>
-        </tr>
+
+    <!-- Selector de tipo de cuenta -->
+    <div class="filter-select">
+      <select [ngModel]="selectedType" (ngModelChange)="onTypeChange()" aria-label="Filtrar por tipo de cuenta">
+        <option value="all">Todos los tipos</option>
+        @for (type of accountTypes; track type) {
+        <option [value]="type">{{ accountTypeTranslations[type].es }}</option>
         }
-      </tbody>
-    </table>
+      </select>
+    </div>
+  </div>
+</section>
+
+<section class="page-content">
+  <!-- Estado de carga -->
+  @if (loading()) {
+  <div class="skeleton-container">
+    @for (i of [1,2,3,4,5]; track i) {
+    <div class="skeleton-row">
+      <div class="skeleton-cell name-cell"></div>
+      <div class="skeleton-cell type-cell"></div>
+      <div class="skeleton-cell balance-cell"></div>
+      <div class="skeleton-cell actions-cell"></div>
+    </div>
     }
   </div>
   }
-</main>
+
+  <!-- Estado de error -->
+  @if (error()) {
+  <div class="error-state">
+    <div class="error-icon">
+      <lucide-icon [img]="AlertCircleIcon" size="48"></lucide-icon>
+    </div>
+    <h3>Error al cargar datos</h3>
+    <p>{{ error() }}</p>
+    <button class="btn-primary" (click)="reloadAccounts()">
+      Reintentar
+    </button>
+  </div>
+  }
+
+  <!-- Estado vacío -->
+  @if (isEmptyState()) {
+  <div class="empty-state">
+    <div class="empty-icon">
+      <lucide-icon [img]="FileSearchIcon" size="48"></lucide-icon>
+    </div>
+    <h3>No se encontraron cuentas</h3>
+    <p>Intenta cambiar los filtros o crear una nueva cuenta</p>
+    <button class="btn-primary" (click)="navigateToCreate()">
+      Crear nueva cuenta
+    </button>
+  </div>
+  }
+
+  <!-- Tabla de cuentas -->
+  @if (hasAccountsToDisplay()) {
+  <div class="table-container">
+    <table>
+      <thead>
+        <tr>
+          <th class="col-name">Nombre</th>
+          <th class="col-type">Tipo</th>
+          <th class="col-balance">Balance</th>
+          <th class="col-actions">Acciones</th>
+        </tr>
+      </thead>
+      <tbody>
+        @for (account of displayAccounts(); track trackByAccountId($index, account); let i = $index) {
+        <tr [class.parent-row]="account.children && account.children.length > 0"
+          (click)="onRowClick(account.id, account.children && account.children.length > 0, $event)">
+          <td class="name-cell" [style.--level]="account.level">
+            <div class="hierarchy-lines">
+              @for (line of getHierarchyLines(account.level); track $index) {
+              <div class="hierarchy-line" [class.vertical]="line.vertical" [class.horizontal]="line.horizontal"></div>
+              }
+            </div>
+
+            @if (account.children && account.children.length > 0) {
+            <button class="expand-btn" (click)="toggleExpand(account.id); $event.stopPropagation()"
+              [attr.aria-label]="account.isExpanded ? 'Contraer cuenta' : 'Expandir cuenta'">
+              <lucide-icon [img]="account.isExpanded ? ChevronDownIcon : ChevronRightIcon" size="16">
+              </lucide-icon>
+            </button>
+            }
+            @else {
+            <div class="expand-placeholder"></div>
+            }
+
+            <span class="account-code">{{ account.code }}</span>
+            <span class="account-name">{{ account.name }}</span>
+          </td>
+
+          <td class="type-cell">
+            <span class="account-type">{{ accountTypeTranslations[account.type].es }}</span>
+          </td>
+
+          <td class="balance-cell" [class.negative]="account.balance < 0">
+            {{ account.balance | currency }}
+          </td>
+
+          <td class="actions-cell">
+            <button class="btn-icon" (click)="navigateToEdit(account.id, $event)" aria-label="Editar cuenta">
+              <lucide-icon [img]="EditIcon" size="16"></lucide-icon>
+            </button>
+          </td>
+        </tr>
+        }
+      </tbody>
+    </table>
+  </div>
+  }
+</section>
