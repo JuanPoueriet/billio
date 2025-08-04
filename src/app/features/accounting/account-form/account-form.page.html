@@ -92,7 +92,7 @@
                         <select id="category" formControlName="category" [disabled]="!accountForm.get('type')?.value"
                             [class.invalid]="accountForm.get('category')?.invalid && accountForm.get('category')?.touched">
                             <option value="" disabled>Select Account Category</option>
-                            @for (option of accountCategoryOptions; track option.value) {
+                            @for (option of accountCategories(); track option.value) {
                             <option [value]="option.value">{{ option.label }}</option>
                             }
                         </select>
@@ -124,8 +124,12 @@
                                     <span>None (Top Level Account)</span>
                                 </div>
                                 @for (parent of filteredParentAccounts; track parent.id) {
-                                <div class="dropdown-item" [class.disabled]="parent.isDisabled"
-                                    (click)="!parent.isDisabled && selectParentAccount(parent)">
+                                <div class="dropdown-item" 
+                                     [class.disabled]="parent.isDisabled"
+                                     [attr.aria-disabled]="parent.isDisabled ? true : null"
+                                     [attr.tabindex]="parent.isDisabled ? -1 : 0"
+                                     [style.pointer-events]="parent.isDisabled ? 'none' : null"
+                                     (click)="selectParentAccount(parent)">
                                     <span>{{ parent.code }} - {{ parent.name }}</span>
                                     @if (parent.isDisabled) {
                                     <span class="badge">Current Account</span>
@@ -161,6 +165,17 @@
                             <p>Description cannot exceed 500 characters</p>
                         </div>
                         }
+                    </div>
+
+                    <!-- Campo: Moneda -->
+                    <div class="form-field">
+                        <label for="currency">Currency *</label>
+                        <select id="currency" formControlName="currency">
+                            <option value="USD">USD - US Dollar</option>
+                            <option value="EUR">EUR - Euro</option>
+                            <option value="MXN">MXN - Peso Mexicano</option>
+                            <!-- Agrega más monedas según necesidad -->
+                        </select>
                     </div>
                 </div>
             </div>

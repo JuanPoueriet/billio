@@ -1,9 +1,7 @@
 import { Injectable, inject, signal, computed, OnDestroy } from '@angular/core';
-// import { ChartOfAccountsService } from '../../../core/services/chart-of-accounts';
-// import { Account, AccountType, AccountTypeTranslations } from '../../../core/models/account.model';
-// import { FlattenedAccount } from '../../../core/models/flattened-account.model';
 import { Subject, takeUntil } from 'rxjs';
 import { ChartOfAccountsService } from '../services/chart-of-accounts';
+import { TreeService } from '../services/tree';
 import { Account, AccountType, AccountTypeTranslations } from '../models/account.model';
 import { FlattenedAccount } from '../models/flattened-account.model';
 
@@ -13,7 +11,8 @@ import { FlattenedAccount } from '../models/flattened-account.model';
 export class ChartOfAccountsStateService implements OnDestroy {
   private destroy$ = new Subject<void>();
   private chartOfAccountsService = inject(ChartOfAccountsService);
-  
+  private treeService = inject(TreeService);
+
   // Estado centralizado
   public accounts = signal<Account[]>([]);
   public loading = signal(true);
@@ -22,49 +21,35 @@ export class ChartOfAccountsStateService implements OnDestroy {
   public searchQuery = signal('');
   public selectedType = signal<AccountType | 'all'>('all');
 
+  // Nuevas señales para mejorar performance
+  public reloading = signal(false);
+  public expandingAll = signal(false);
+  public collapsingAll = signal(false);
+
+  // Memoización de cuentas aplanadas sin filtros
+  private flattenedAccounts = signal<FlattenedAccount[]>([]);
+
   // Traducciones
   public accountTypeTranslations = AccountTypeTranslations;
   public accountTypes = Object.values(AccountType);
 
-  // Computed: Cuentas aplanadas con filtros aplicados
+  // Computed: Cuentas visibles según filtros
   public displayAccounts = computed<FlattenedAccount[]>(() => {
     const query = this.searchQuery().toLowerCase();
     const type = this.selectedType();
     const expanded = this.expandedIds();
-    const accounts = this.accounts();
 
-    const buildAndFilter = (accounts: Account[], level: number): FlattenedAccount[] => {
-      let result: FlattenedAccount[] = [];
+    return this.flattenedAccounts().filter(account => {
+      const matchesType = type === 'all' || account.type === type;
+      const matchesQuery =
+        query === '' ||
+        account.name.toLowerCase().includes(query) ||
+        account.code.toLowerCase().includes(query);
 
-      for (const account of accounts) {
-        const isExpanded = expanded.has(account.id);
-        const children = account.children || [];
-        const visibleChildren = buildAndFilter(children, level + 1);
+      const parentExpanded = this.isParentExpanded(account);
 
-        const selfMatches = 
-          (type === 'all' || account.type === type) &&
-          (query === '' || 
-           account.name.toLowerCase().includes(query) || 
-           account.code.toLowerCase().includes(query));
-
-        if (selfMatches || visibleChildren.length > 0) {
-          result.push({ 
-            ...account, 
-            level, 
-            isExpanded,
-            hasChildren: children.length > 0
-          });
-          
-          if (isExpanded && visibleChildren.length > 0) {
-            result = result.concat(visibleChildren);
-          }
-        }
-      }
-      
-      return result;
-    };
-
-    return buildAndFilter(accounts, 0);
+      return matchesType && matchesQuery && parentExpanded;
+    });
   });
 
   constructor() {
@@ -72,15 +57,15 @@ export class ChartOfAccountsStateService implements OnDestroy {
   }
 
   // Cargar cuentas desde el servicio
-  loadAccounts(): void {
-    this.loading.set(true);
-    this.error.set(null);
-    
+  async loadAccounts(): Promise<void> {
+    this.reloading.set(true);
+
     this.chartOfAccountsService.getAccounts()
       .pipe(takeUntil(this.destroy$))
       .subscribe({
         next: (accounts) => {
           this.accounts.set(accounts);
+          this.updateFlattenedAccounts();
           this.loading.set(false);
         },
         error: (err) => {
@@ -89,6 +74,21 @@ export class ChartOfAccountsStateService implements OnDestroy {
           this.loading.set(false);
         }
       });
+
+    this.reloading.set(false);
+  }
+
+  // Actualiza la señal de cuentas aplanadas (sin filtros)
+  private updateFlattenedAccounts(): void {
+    this.flattenedAccounts.set(
+      this.treeService['flattenTree'](this.accounts())
+    );
+  }
+
+  // Determina si el padre está expandido (para visibilidad)
+  private isParentExpanded(account: FlattenedAccount): boolean {
+    if (!account.parentId) return true;
+    return this.expandedIds().has(account.parentId);
   }
 
   // Alternar estado expandido de una cuenta
@@ -116,8 +116,10 @@ export class ChartOfAccountsStateService implements OnDestroy {
 
   // Expandir todas las cuentas
   expandAll(): void {
+    this.expandingAll.set(true);
     const allIds = this.getAllAccountIds(this.accounts());
     this.expandedIds.set(new Set(allIds));
+    this.expandingAll.set(false);
   }
 
   // Colapsar todas las cuentas
@@ -128,73 +130,18 @@ export class ChartOfAccountsStateService implements OnDestroy {
   // Obtener todos los IDs de cuenta recursivamente
   private getAllAccountIds(accounts: Account[]): string[] {
     let ids: string[] = [];
-    
+
     for (const account of accounts) {
       ids.push(account.id);
-      if (account.children && account.children.length > 0) {
+      if (account.children) {
         ids = ids.concat(this.getAllAccountIds(account.children));
       }
     }
-    
+
     return ids;
   }
 
-  // Actualizar cuenta después de edición/creación
-  updateAccount(updatedAccount: Account): void {
-    this.accounts.update(currentAccounts => {
-      const updateRecursive = (accounts: Account[]): Account[] => {
-        return accounts.map(account => {
-          if (account.id === updatedAccount.id) {
-            return updatedAccount;
-          }
-          
-          if (account.children && account.children.length > 0) {
-            return {
-              ...account,
-              children: updateRecursive(account.children)
-            };
-          }
-          
-          return account;
-        });
-      };
-      
-      return updateRecursive(currentAccounts);
-    });
-  }
-
-  // Añadir nueva cuenta
-  addNewAccount(newAccount: Account, parentId?: string): void {
-    this.accounts.update(currentAccounts => {
-      if (!parentId) {
-        return [...currentAccounts, newAccount];
-      }
-      
-      const addRecursive = (accounts: Account[]): Account[] => {
-        return accounts.map(account => {
-          if (account.id === parentId) {
-            return {
-              ...account,
-              children: [...(account.children || []), newAccount]
-            };
-          }
-          
-          if (account.children && account.children.length > 0) {
-            return {
-              ...account,
-              children: addRecursive(account.children)
-            };
-          }
-          
-          return account;
-        });
-      };
-      
-      return addRecursive(currentAccounts);
-    });
-  }
-
-  // Manejo de limpieza
+  // Cleanup al destruir el servicio
   ngOnDestroy(): void {
     this.destroy$.next();
     this.destroy$.complete();

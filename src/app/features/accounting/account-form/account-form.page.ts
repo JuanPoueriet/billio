@@ -1,44 +1,43 @@
-import { 
-  Component, 
-  inject, 
-  OnInit, 
-  OnDestroy, 
-  ChangeDetectorRef, 
-  computed, 
-  Signal 
+import {
+  Component,
+  inject,
+  OnInit,
+  OnDestroy,
+  ChangeDetectorRef,
+  computed,
+  Signal
 } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { Router, ActivatedRoute, RouterLink } from '@angular/router';
-import { 
-  FormBuilder, 
-  FormGroup, 
-  FormControl, 
-  ReactiveFormsModule, 
-  Validators, 
-  FormsModule 
+import {
+  FormBuilder,
+  FormGroup,
+  FormControl,
+  ReactiveFormsModule,
+  Validators,
+  FormsModule
 } from '@angular/forms';
-import { 
-  LucideAngularModule, 
-  Save, 
-  X, 
-  ChevronDown, 
-  ChevronUp, 
-  Loader 
+import {
+  LucideAngularModule,
+  Save,
+  X,
+  ChevronDown,
+  ChevronUp,
+  Loader
 } from 'lucide-angular';
-import { 
-  AccountType, 
-  AccountCategory, 
-  AccountCategoryTranslations, 
-  CreateAccountDto, 
-  Account 
+import {
+  AccountType,
+  AccountCategory,
+  AccountCategoryTranslations,
+  CreateAccountDto,
+  Account
 } from '../../../core/models/account.model';
 import { ChartOfAccountsService } from '../../../core/services/chart-of-accounts';
 import { TreeService } from '../../../core/services/tree';
 import { NotificationService } from '../../../core/services/notification';
 import { LanguageService } from '../../../core/services/language';
-import { Subscription, distinctUntilChanged } from 'rxjs';
+import { Subscription, forkJoin, of } from 'rxjs';
 import { ThemeService } from '../../../core/services/theme';
-import { toObservable } from '@angular/core/rxjs-interop';
 
 @Component({
   selector: 'app-account-form-page',
@@ -80,7 +79,6 @@ export class AccountFormPage implements OnInit, OnDestroy {
 
   // Enums y opciones
   public accountTypeOptions: { value: AccountType, label: string }[] = [];
-  public accountCategoryOptions: { value: AccountCategory, label: string }[] = [];
   public categoryMap: Record<AccountType, AccountCategory[]> = {
     [AccountType.ASSET]: [
       AccountCategory.CURRENT_ASSET,
@@ -108,30 +106,43 @@ export class AccountFormPage implements OnInit, OnDestroy {
   // Formulario
   public accountForm: FormGroup = this.fb.group({
     code: new FormControl('', [
-      Validators.required, 
+      Validators.required,
       Validators.pattern(/^[0-9]+(\.[0-9]+)*$/),
       Validators.maxLength(20)
     ]),
     name: new FormControl('', [
-      Validators.required, 
+      Validators.required,
       Validators.maxLength(100)
     ]),
     type: new FormControl(null as AccountType | null, Validators.required),
     category: new FormControl(null as AccountCategory | null, Validators.required),
     parentId: new FormControl(null as string | null),
     description: new FormControl('', Validators.maxLength(500)),
-    isActive: new FormControl(true)
+    isActive: new FormControl(true),
+    currency: new FormControl('USD', Validators.required) // <-- Añadido, valor por defecto
   });
 
-  // Computed properties
+  // Computed: Cuenta padre seleccionada
   public selectedParentAccount = computed(() => {
     const parentId = this.accountForm.get('parentId')?.value;
     if (!parentId) return null;
     return this.parentAccounts.find(acc => acc.id === parentId);
   });
 
+  // ✅ Nueva señal computada para categorías
+  public accountCategories = computed(() => {
+    const type = this.accountForm.get('type')?.value as AccountType | null;
+    const lang = this.languageService.currentLang();
+
+    if (!type) return [];
+
+    return this.categoryMap[type].map((cat: AccountCategory) => ({
+      value: cat,
+      label: AccountCategoryTranslations[cat][lang as keyof typeof AccountCategoryTranslations[AccountCategory]]
+    }));
+  });
+
   constructor() {
-    // Inicializar opciones de tipo de cuenta
     this.accountTypeOptions = Object.values(AccountType).map(type => ({
       value: type,
       label: type
@@ -139,49 +150,49 @@ export class AccountFormPage implements OnInit, OnDestroy {
   }
 
   ngOnInit(): void {
-    // Obtener parámetros de la ruta
     this.subscriptions.push(
       this.route.params.subscribe(params => {
         if (params['id']) {
           this.isEditMode = true;
           this.currentAccountId = params['id'];
-          // CORRECCIÓN: Verificar que currentAccountId no sea null
           if (this.currentAccountId) {
-            this.loadAccountData(this.currentAccountId);
+            // Encadenar ambas cargas
+            this.loading = true;
+            forkJoin({
+              parents: this.chartOfAccountsService.getAccounts(),
+              account: this.chartOfAccountsService.getAccountById(this.currentAccountId)
+            }).subscribe({
+              next: ({ parents, account }) => {
+                this.parentAccounts = this.treeService.getSelectableAccounts(
+                  parents,
+                  this.currentAccountId ?? undefined // <-- Corrige el tipo aquí
+                );
+                this.filteredParentAccounts = [...this.parentAccounts];
+                this.accountForm.patchValue({
+                  code: account.code,
+                  name: account.name,
+                  type: account.type,
+                  category: account.category,
+                  parentId: account.parentId,
+                  description: account.description,
+                  isActive: account.isActive
+                });
+                this.loading = false;
+                this.cdr.detectChanges();
+              },
+              error: (err) => {
+                this.notificationService.showError('Failed to load account data');
+                this.loading = false;
+              }
+            });
           }
+        } else {
+          this.loadParentAccounts();
         }
       })
     );
 
-    // Cargar cuentas padre
     this.loadParentAccounts();
-
-    // Reaccionar a cambios en el tipo de cuenta
-    this.subscriptions.push(
-      this.accountForm.get('type')!.valueChanges.pipe(
-        distinctUntilChanged()
-      ).subscribe(type => {
-        this.updateCategoryOptions(type);
-      })
-    );
-
-    // CORRECCIÓN: Usar toObservable para la señal currentLang
-    const lang$ = toObservable(this.languageService.currentLang);
-    this.subscriptions.push(
-      lang$.subscribe((lang: string) => {
-        // Actualizar etiquetas de categorías si el idioma cambia
-        const currentType = this.accountForm.get('type')?.value;
-        if (currentType) {
-          this.updateCategoryOptions(currentType);
-        }
-      })
-    );
-
-    // Inicializar opciones de categoría si ya hay un tipo seleccionado
-    const initialType = this.accountForm.get('type')?.value;
-    if (initialType) {
-      this.updateCategoryOptions(initialType);
-    }
   }
 
   ngOnDestroy(): void {
@@ -216,15 +227,10 @@ export class AccountFormPage implements OnInit, OnDestroy {
     this.loading = true;
     this.chartOfAccountsService.getAccounts().subscribe({
       next: (accounts) => {
-        if (this.currentAccountId) {
-          // Filtrar cuentas inválidas (cuenta actual y sus descendientes)
-          this.parentAccounts = this.treeService.filterDisabledAccounts(
-            accounts,
-            this.currentAccountId
-          );
-        } else {
-          this.parentAccounts = this.treeService.flattenForSelect(accounts);
-        }
+        this.parentAccounts = this.treeService.getSelectableAccounts(
+          accounts,
+          this.isEditMode && this.currentAccountId ? this.currentAccountId : undefined
+        );
         this.filteredParentAccounts = [...this.parentAccounts];
         this.loading = false;
         this.cdr.detectChanges();
@@ -235,25 +241,6 @@ export class AccountFormPage implements OnInit, OnDestroy {
         this.loading = false;
       }
     });
-  }
-
-  updateCategoryOptions(type: AccountType | null): void {
-    if (!type) {
-      this.accountCategoryOptions = [];
-      this.accountForm.get('category')?.reset();
-      return;
-    }
-
-    const lang = this.languageService.currentLang();
-    this.accountCategoryOptions = this.categoryMap[type].map(cat => ({
-      value: cat,
-      label: AccountCategoryTranslations[cat][lang as keyof typeof AccountCategoryTranslations[AccountCategory]]
-    }));
-    
-    // Si solo hay una opción, seleccionarla automáticamente
-    if (this.accountCategoryOptions.length === 1) {
-      this.accountForm.get('category')?.setValue(this.accountCategoryOptions[0].value);
-    }
   }
 
   toggleParentDropdown(): void {
@@ -270,13 +257,14 @@ export class AccountFormPage implements OnInit, OnDestroy {
     }
 
     const query = this.parentSearchQuery.toLowerCase();
-    this.filteredParentAccounts = this.parentAccounts.filter(account => 
-      account.name.toLowerCase().includes(query) || 
+    this.filteredParentAccounts = this.parentAccounts.filter(account =>
+      account.name.toLowerCase().includes(query) ||
       account.code.toLowerCase().includes(query)
     );
   }
 
   selectParentAccount(account: any | null): void {
+    if (account && account.isDisabled) return; // <--- Previene selección
     this.accountForm.get('parentId')?.setValue(account ? account.id : null);
     this.showParentDropdown = false;
     this.parentSearchQuery = '';
@@ -297,8 +285,7 @@ export class AccountFormPage implements OnInit, OnDestroy {
 
     this.saving = true;
     const formValue = this.accountForm.value;
-    
-    // CORRECCIÓN: Crear objeto compatible con CreateAccountDto
+
     const accountData: CreateAccountDto = {
       code: formValue.code,
       name: formValue.name,
@@ -306,12 +293,9 @@ export class AccountFormPage implements OnInit, OnDestroy {
       category: formValue.category,
       parentId: formValue.parentId || null,
       description: formValue.description || null,
-      // Si el backend requiere isActive, asegúrate de que CreateAccountDto lo incluya
-      // De lo contrario, elimina esta línea
-      // isActive: formValue.isActive
+      currency: formValue.currency // <-- Añadido
     };
 
-    // CORRECCIÓN: Verificar modo de edición y currentAccountId
     const operation = this.isEditMode && this.currentAccountId
       ? this.chartOfAccountsService.updateAccount(this.currentAccountId, accountData)
       : this.chartOfAccountsService.createAccount(accountData);

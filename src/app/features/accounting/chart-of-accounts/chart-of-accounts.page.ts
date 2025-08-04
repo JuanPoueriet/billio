@@ -64,8 +64,8 @@ export class ChartOfAccountsPage implements OnInit, OnDestroy {
   public accountTypes = Object.values(AccountType);
   
   // Variables locales para filtros
-  public searchInput = '';
-  public selectedType: AccountType | 'all' = 'all';
+  // public searchInput = '';
+  // public selectedType: AccountType | 'all' = 'all';
 
   // Estado de carga para acciones
   public reloading = false;
@@ -88,14 +88,14 @@ export class ChartOfAccountsPage implements OnInit, OnDestroy {
     const selectedType$ = toObservable(this.state.selectedType);
 
     // Sincronizar estado de búsqueda (con tipado explícito)
-    searchQuery$.subscribe((query: string) => {
-      this.searchInput = query;
-    });
+    // searchQuery$.subscribe((query: string) => {
+    //   this.searchInput = query;
+    // });
 
     // Sincronizar tipo seleccionado (con tipado explícito)
-    selectedType$.subscribe((type: AccountType | 'all') => {
-      this.selectedType = type;
-    });
+    // selectedType$.subscribe((type: AccountType | 'all') => {
+    //   this.selectedType = type;
+    // });
   }
 
   ngOnInit(): void {
@@ -103,13 +103,13 @@ export class ChartOfAccountsPage implements OnInit, OnDestroy {
   }
 
   // Métodos de UI
-  onSearchInput(): void {
-    this.state.setSearchQuery(this.searchInput);
-  }
+  // onSearchInput(): void {
+  //   this.state.setSearchQuery(this.searchInput);
+  // }
 
-  onTypeChange(): void {
-    this.state.setSelectedType(this.selectedType);
-  }
+  // onTypeChange(): void {
+  //   this.state.setSelectedType(this.selectedType);
+  // }
 
   toggleExpand(accountId: string): void {
     this.state.toggleExpand(accountId);
@@ -126,23 +126,11 @@ export class ChartOfAccountsPage implements OnInit, OnDestroy {
   }
 
   expandAll(): void {
-    this.expandingAll = true;
     this.state.expandAll();
-    
-    // Feedback visual
-    setTimeout(() => {
-      this.expandingAll = false;
-    }, 500);
   }
 
   collapseAll(): void {
-    this.collapsingAll = true;
     this.state.collapseAll();
-    
-    // Feedback visual
-    setTimeout(() => {
-      this.collapsingAll = false;
-    }, 500);
   }
 
   navigateToEdit(accountId: string, event?: Event): void {

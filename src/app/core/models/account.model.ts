@@ -50,6 +50,7 @@ export interface Account {
   type: AccountType;
   category: AccountCategory;
   balance: number;
+  currency: string; // <--- Añadido
   isActive: boolean;
   isSystemAccount: boolean;
   createdAt: Date;

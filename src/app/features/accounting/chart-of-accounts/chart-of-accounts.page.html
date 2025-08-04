@@ -11,12 +11,12 @@
 
       <!-- Botón de expandir todo -->
       <button class="btn-icon" (click)="expandAll()" [disabled]="expandingAll" title="Expandir todo">
-        <lucide-icon [img]="ExpandAllIcon" size="20"></lucide-icon>
+        <lucide-icon [img]="ExpandAllIcon" [class.spinning]="expandingAll" size="20"></lucide-icon>
       </button>
 
       <!-- Botón de colapsar todo -->
       <button class="btn-icon" (click)="collapseAll()" [disabled]="collapsingAll" title="Colapsar todo">
-        <lucide-icon [img]="CollapseAllIcon" size="20"></lucide-icon>
+        <lucide-icon [img]="CollapseAllIcon" [class.spinning]="collapsingAll" size="20"></lucide-icon>
       </button>
     </div>
   </div>
@@ -35,13 +35,15 @@
     <!-- Caja de búsqueda -->
     <div class="search-box">
       <lucide-icon [img]="SearchIcon" size="18"></lucide-icon>
-      <input type="text" placeholder="Buscar por código o nombre..." [ngModel]="searchInput"
-        (ngModelChange)="onSearchInput()" aria-label="Buscar cuentas">
+      <!-- <input type="text" placeholder="Buscar por código o nombre..." [ngModel]="searchInput"
+        (ngModelChange)="onSearchInput()" aria-label="Buscar cuentas"> -->
+      <input [ngModel]="state.searchQuery()" (ngModelChange)="state.setSearchQuery($event)">
     </div>
 
     <!-- Selector de tipo de cuenta -->
     <div class="filter-select">
-      <select [ngModel]="selectedType" (ngModelChange)="onTypeChange()" aria-label="Filtrar por tipo de cuenta">
+      <!-- <select [ngModel]="selectedType" (ngModelChange)="onTypeChange()" aria-label="Filtrar por tipo de cuenta"> -->
+      <select [ngModel]="state.selectedType()" (ngModelChange)="state.setSelectedType($event)">
         <option value="all">Todos los tipos</option>
         @for (type of accountTypes; track type) {
         <option [value]="type">{{ accountTypeTranslations[type].es }}</option>
@@ -137,7 +139,7 @@
           </td>
 
           <td class="balance-cell" [class.negative]="account.balance < 0">
-            {{ account.balance | currency }}
+            {{ account.balance | currency:account.currency }}
           </td>
 
           <td class="actions-cell">
