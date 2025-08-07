@@ -1,156 +1,108 @@
-<header class="page-header">
-  <div class="header-left">
-    <h1 class="page-title">Plan de Cuentas</h1>
-
-    <div class="action-buttons">
-      <!-- Botón de recargar -->
-      <button class="btn-icon" (click)="reloadAccounts()" [disabled]="reloading" title="Recargar">
-        <lucide-icon [img]="RefreshIcon" [class.spinning]="reloading" size="20">
-        </lucide-icon>
-      </button>
-
-      <!-- Botón de expandir todo -->
-      <button class="btn-icon" (click)="expandAll()" [disabled]="expandingAll" title="Expandir todo">
-        <lucide-icon [img]="ExpandAllIcon" [class.spinning]="expandingAll" size="20"></lucide-icon>
-      </button>
-
-      <!-- Botón de colapsar todo -->
-      <button class="btn-icon" (click)="collapseAll()" [disabled]="collapsingAll" title="Colapsar todo">
-        <lucide-icon [img]="CollapseAllIcon" [class.spinning]="collapsingAll" size="20"></lucide-icon>
+<div class="page-container">
+  <!-- Encabezado de la Página -->
+  <div class="page-header">
+    <h1><i class="fas fa-sitemap"></i> Plan de Cuentas</h1>
+    <div class="header-actions">
+      <button class="btn btn-primary" (click)="goToAccountForm()">
+        <i class="fas fa-plus"></i> Nueva Cuenta
       </button>
     </div>
   </div>
 
-  <div class="header-right">
-    <!-- Botón para crear nueva cuenta -->
-    <button class="btn-primary" (click)="navigateToCreate()">
-      <lucide-icon [img]="PlusCircleIcon" size="16"></lucide-icon>
-      <span>Nueva Cuenta</span>
-    </button>
-  </div>
-</header>
-
-<section class="controls-section">
-  <div class="search-filter">
-    <!-- Caja de búsqueda -->
-    <div class="search-box">
-      <lucide-icon [img]="SearchIcon" size="18"></lucide-icon>
-      <!-- <input type="text" placeholder="Buscar por código o nombre..." [ngModel]="searchInput"
-        (ngModelChange)="onSearchInput()" aria-label="Buscar cuentas"> -->
-      <input [ngModel]="state.searchQuery()" (ngModelChange)="state.setSearchQuery($event)">
-    </div>
-
-    <!-- Selector de tipo de cuenta -->
-    <div class="filter-select">
-      <!-- <select [ngModel]="selectedType" (ngModelChange)="onTypeChange()" aria-label="Filtrar por tipo de cuenta"> -->
-      <select [ngModel]="state.selectedType()" (ngModelChange)="state.setSelectedType($event)">
-        <option value="all">Todos los tipos</option>
-        @for (type of accountTypes; track type) {
-        <option [value]="type">{{ accountTypeTranslations[type].es }}</option>
-        }
+  <!-- Barra de Herramientas y Filtros -->
+  <div class="toolbar card">
+    <div class="filter-group">
+      <label for="version-selector"><i class="fas fa-code-branch"></i> Versión:</label>
+      <select id="version-selector" class="form-control"
+              [ngModel]="state.selectedVersion()"
+              (ngModelChange)="onVersionChange($event)">
+        <option *ngIf="state.versions().length === 0" disabled>Cargando...</option>
+        <option *ngFor="let v of state.versions()" [value]="v">{{ 'v' + v }}</option>
       </select>
     </div>
-  </div>
-</section>
 
-<section class="page-content">
-  <!-- Estado de carga -->
-  @if (loading()) {
-  <div class="skeleton-container">
-    @for (i of [1,2,3,4,5]; track i) {
-    <div class="skeleton-row">
-      <div class="skeleton-cell name-cell"></div>
-      <div class="skeleton-cell type-cell"></div>
-      <div class="skeleton-cell balance-cell"></div>
-      <div class="skeleton-cell actions-cell"></div>
+    <div class="filter-group">
+      <label for="hierarchy-selector"><i class="fas fa-layer-group"></i> Jerarquía:</label>
+      <select id="hierarchy-selector" class="form-control"
+              [ngModel]="state.selectedHierarchy()"
+              (ngModelChange)="onHierarchyChange($event)">
+        <option value="LEGAL">Legal</option>
+        <option value="MANAGEMENT">Gestión (Management)</option>
+        <option value="FISCAL">Fiscal</option>
+      </select>
     </div>
-    }
-  </div>
-  }
 
-  <!-- Estado de error -->
-  @if (error()) {
-  <div class="error-state">
-    <div class="error-icon">
-      <lucide-icon [img]="AlertCircleIcon" size="48"></lucide-icon>
+    <div class="search-bar">
+      <i class="fas fa-search"></i>
+      <input type="text" placeholder="Buscar por código o nombre..." class="form-control"
+             (input)="onSearchTermChange($event)">
     </div>
-    <h3>Error al cargar datos</h3>
-    <p>{{ error() }}</p>
-    <button class="btn-primary" (click)="reloadAccounts()">
-      Reintentar
-    </button>
-  </div>
-  }
 
-  <!-- Estado vacío -->
-  @if (isEmptyState()) {
-  <div class="empty-state">
-    <div class="empty-icon">
-      <lucide-icon [img]="FileSearchIcon" size="48"></lucide-icon>
+    <div class="toolbar-actions">
+       <button class="btn btn-secondary" title="Importar / Exportar" (click)="goToBulkOperations()"><i class="fas fa-exchange-alt"></i></button>
+       <button class="btn btn-secondary" title="Fusionar Cuentas" (click)="goToMergeTool()"><i class="fas fa-code-merge"></i></button>
+       <button class="btn btn-secondary" title="Crear Nueva Versión" (click)="createNewVersion()"><i class="fas fa-plus-circle"></i></button>
     </div>
-    <h3>No se encontraron cuentas</h3>
-    <p>Intenta cambiar los filtros o crear una nueva cuenta</p>
-    <button class="btn-primary" (click)="navigateToCreate()">
-      Crear nueva cuenta
-    </button>
   </div>
-  }
 
-  <!-- Tabla de cuentas -->
-  @if (hasAccountsToDisplay()) {
-  <div class="table-container">
-    <table>
-      <thead>
-        <tr>
-          <th class="col-name">Nombre</th>
-          <th class="col-type">Tipo</th>
-          <th class="col-balance">Balance</th>
-          <th class="col-actions">Acciones</th>
-        </tr>
-      </thead>
-      <tbody>
-        @for (account of displayAccounts(); track trackByAccountId($index, account); let i = $index) {
-        <tr [class.parent-row]="account.children && account.children.length > 0"
-          (click)="onRowClick(account.id, account.children && account.children.length > 0, $event)">
-          <td class="name-cell" [style.--level]="account.level">
-            <div class="hierarchy-lines">
-              @for (line of getHierarchyLines(account.level); track $index) {
-              <div class="hierarchy-line" [class.vertical]="line.vertical" [class.horizontal]="line.horizontal"></div>
-              }
+  <!-- Contenido Principal: Árbol de Cuentas -->
+  <div class="content-area card">
+    <!-- Estado de Carga -->
+    <div *ngIf="state.isLoading()" class="loading-indicator">
+      <i class="fas fa-spinner fa-spin"></i>
+      <p>Cargando plan de cuentas...</p>
+    </div>
+
+    <!-- Estado de Error -->
+    <div *ngIf="!state.isLoading() && state.error()" class="error-message">
+      <i class="fas fa-exclamation-triangle"></i>
+      <p>{{ state.error() }}</p>
+      <button class="btn" (click)="state.refreshAccounts()">Reintentar</button>
+    </div>
+
+    <!-- Contenido Principal (cuando no hay carga ni error) -->
+    <div *ngIf="!state.isLoading() && !state.error()">
+      <div class="account-tree">
+        <!-- Encabezado del Árbol/Tabla -->
+        <div class="tree-header">
+          <div class="col-name">Código y Nombre</div>
+          <div class="col-type">Tipo</div>
+          <div class="col-nature">Naturaleza</div>
+          <div class="col-postable">Imputable</div>
+          <div class="col-balance">Balance</div>
+          <div class="col-actions">Acciones</div>
+        </div>
+        <!-- Cuerpo del Árbol/Tabla -->
+        <div class="tree-body">
+          <ng-container *ngIf="state.displayAccounts().length > 0; else noResults">
+            <div *ngFor="let account of state.displayAccounts()" class="tree-row" [class.inactive]="!account.isActive">
+              <div class="col-name" [style.paddingLeft.px]="account.level * 25">
+                <span class="account-code">{{ account.code }}</span>
+                <span class="account-name">{{ account.name }}</span>
+              </div>
+              <div class="col-type"><span class="badge type-{{account.type.toLowerCase()}}">{{ account.type }}</span></div>
+              <div class="col-nature">{{ account.nature }}</div>
+              <div class="col-postable">
+                <i [class]="account.isPostable ? 'fas fa-check-circle text-success' : 'fas fa-minus-circle text-muted'"></i>
+              </div>
+              <div class="col-balance">{{ account.balance | currency:'USD':'symbol':'1.2-2' }}</div>
+              <div class="col-actions">
+                <button class="btn-icon" (click)="goToAccountForm(account.id)" title="Editar Cuenta">
+                  <i class="fas fa-pencil-alt"></i>
+                </button>
+                <!-- Aquí se pueden añadir más acciones en el futuro -->
+              </div>
             </div>
-
-            @if (account.children && account.children.length > 0) {
-            <button class="expand-btn" (click)="toggleExpand(account.id); $event.stopPropagation()"
-              [attr.aria-label]="account.isExpanded ? 'Contraer cuenta' : 'Expandir cuenta'">
-              <lucide-icon [img]="account.isExpanded ? ChevronDownIcon : ChevronRightIcon" size="16">
-              </lucide-icon>
-            </button>
-            }
-            @else {
-            <div class="expand-placeholder"></div>
-            }
-
-            <span class="account-code">{{ account.code }}</span>
-            <span class="account-name">{{ account.name }}</span>
-          </td>
-
-          <td class="type-cell">
-            <span class="account-type">{{ accountTypeTranslations[account.type].es }}</span>
-          </td>
-
-          <td class="balance-cell" [class.negative]="account.balance < 0">
-            {{ account.balance | currency:account.currency }}
-          </td>
-
-          <td class="actions-cell">
-            <button class="btn-icon" (click)="navigateToEdit(account.id, $event)" aria-label="Editar cuenta">
-              <lucide-icon [img]="EditIcon" size="16"></lucide-icon>
-            </button>
-          </td>
-        </tr>
-        }
-      </tbody>
-    </table>
+          </ng-container>
+          
+          <!-- Template para cuando no hay resultados -->
+          <ng-template #noResults>
+            <div class="no-results">
+              <p>No se encontraron cuentas que coincidan con los filtros seleccionados.</p>
+            </div>
+          </ng-template>
+        </div>
+      </div>
+    </div>
   </div>
-  }
-</section>
+</div>

@@ -8,4 +8,5 @@ export interface FlattenedAccount extends Account {
   parentId: string | null;
   isExpanded?: boolean;
   isDisabled?: boolean;
+  hasChildren?: boolean; // Indica si tiene hijos para optimizar la UI
 }

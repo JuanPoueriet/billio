@@ -1,98 +1,131 @@
-// src/app/core/models/account.model.ts
-
 /**
- * @enum AccountType
- * @description Language-agnostic keys for GL account classification.
- * Claves agnósticas al idioma para la clasificación de cuentas contables.
+ * =====================================================================================
+ * ARCHIVO: app/core/models/account.model.ts
+ * =====================================================================================
+ * DESCRIPCIÓN:
+ * Este archivo define los modelos de datos, interfaces y tipos enumerados para la
+ * entidad "Cuenta Contable" (Account) en toda la aplicación. Ha sido expandido
+ * para incluir todas las funcionalidades avanzadas requeridas para una gestión
+ * de nivel empresarial del Plan de Cuentas (Chart of Accounts).
+ * =====================================================================================
  */
-export enum AccountType {
-  ASSET = 'ASSET',
-  LIABILITY = 'LIABILITY',
-  EQUITY = 'EQUITY',
-  REVENUE = 'REVENUE',
-  EXPENSE = 'EXPENSE',
-}
+
+// --- TIPOS ENUMERADOS (ENUM TYPES) ---
+// Estos tipos estandarizan los valores posibles para los atributos de las cuentas,
+// garantizando la consistencia de los datos en toda la aplicación.
 
 /**
- * @enum AccountCategory
- * @description Language-agnostic keys for specific categories within each AccountType.
- * Claves agnósticas al idioma para categorías específicas dentro de cada AccountType.
+ * Define la clasificación principal de una cuenta según los estados financieros.
+ * Estos son los 5 tipos fundamentales de la contabilidad.
  */
-export enum AccountCategory {
-  // Asset Categories / Categorías de Activo
-  CURRENT_ASSET = 'CURRENT_ASSET',
-  NON_CURRENT_ASSET = 'NON_CURRENT_ASSET',
-  // Liability Categories / Categorías de Pasivo
-  CURRENT_LIABILITY = 'CURRENT_LIABILITY',
-  NON_CURRENT_LIABILITY = 'NON_CURRENT_LIABILITY',
-  // Equity Categories / Categorías de Patrimonio
-  OWNERS_EQUITY = 'OWNERS_EQUITY',
-  RETAINED_EARNINGS = 'RETAINED_EARNINGS',
-  // Revenue Categories / Categorías de Ingresos
-  OPERATING_REVENUE = 'OPERATING_REVENUE',
-  NON_OPERATING_REVENUE = 'NON_OPERATING_REVENUE',
-  // Expense Categories / Categorías de Gastos
-  OPERATING_EXPENSE = 'OPERATING_EXPENSE',
-  NON_OPERATING_EXPENSE = 'NON_OPERATING_EXPENSE',
-  COST_OF_GOODS_SOLD = 'COST_OF_GOODS_SOLD',
-}
+export type AccountType = 'ASSET' | 'LIABILITY' | 'EQUITY' | 'REVENUE' | 'EXPENSE';
 
 /**
- * @interface Account
- * @description Represents a single account in the Chart of Accounts. Matches the backend entity.
- * Representa una única cuenta en el Plan de Cuentas. Coincide con la entidad del backend.
+ * Define la naturaleza contable de una cuenta.
+ * - DEBIT (Deudora): Aumenta con cargos en el debe. Típicamente Activos y Gastos.
+ * - CREDIT (Acreedora): Aumenta con abonos en el haber. Típicamente Pasivos, Patrimonio e Ingresos.
+ */
+export type AccountNature = 'DEBIT' | 'CREDIT';
+
+/**
+ * Define las diferentes jerarquías o "vistas" del Plan de Cuentas.
+ * Una misma cuenta puede tener diferentes padres o agrupaciones según la jerarquía.
+ * - LEGAL: Para reportes oficiales y fiscales.
+ * - MANAGEMENT: Para reportes de gestión interna y análisis de negocio.
+ * - FISCAL: Para mapeos específicos a requerimientos tributarios.
+ */
+export type HierarchyType = 'LEGAL' | 'MANAGEMENT' | 'FISCAL';
+
+/**
+ * Define la categoría de una cuenta dentro del Estado de Flujo de Efectivo.
+ */
+export type CashFlowCategory = 'OPERATING' | 'INVESTING' | 'FINANCING' | 'NONE';
+
+/**
+ * Define las dimensiones de negocio que pueden ser requeridas al imputar una cuenta.
+ * Por ejemplo, una cuenta de gastos podría requerir siempre un centro de costo.
+ */
+export type RequiredDimension = 'COST_CENTER' | 'PROJECT' | 'SEGMENT';
+
+/**
+ * Define los orígenes de los asientos contables que pueden ser bloqueados para una cuenta.
+ * Por ejemplo, para prevenir asientos manuales en cuentas de control de sub-diarios.
+ */
+export type BlockedSource = 'MANUAL' | 'SUB_LEDGER_AR' | 'SUB_LEDGER_AP' | 'SUB_LEDGER_INV';
+
+/**
+ * Define los diferentes estándares contables (Generally Accepted Accounting Principles)
+ * para mapeo entre planes de cuentas.
+ */
+export type GaapStandard = 'IFRS' | 'LOCAL_GAAP' | 'US_GAAP';
+
+
+/**
+ * =====================================================================================
+ * INTERFAZ PRINCIPAL: Account
+ * =====================================================================================
+ * Esta es la estructura de datos completa para una cuenta contable.
+ * Combina los campos originales con los nuevos atributos requeridos.
+ * =====================================================================================
  */
 export interface Account {
+
+  // --- ATRIBUTOS FUNDAMENTALES (Existentes y Mantenidos) ---
   id: string;
-  code: string;
-  name: string;
-  description?: string;
-  type: AccountType;
-  category: AccountCategory;
-  balance: number;
-  currency: string; // <--- Añadido
-  isActive: boolean;
-  isSystemAccount: boolean;
-  createdAt: Date;
-  updatedAt: Date;
-  organizationId: string;
-  parentId: string | null;
-  children: Account[];
+  code: string;                      // Código de la cuenta (e.g., "1101-01"). Inmutable después del primer movimiento.
+  name: string;                      // Nombre descriptivo (e.g., "Caja General").
+  description?: string;              // Descripción detallada opcional sobre el uso de la cuenta.
+  type: AccountType;                 // Clasificación principal: Activo, Pasivo, etc. Inmutable después del primer movimiento.
+  parentId: string | null;           // ID de la cuenta padre para construir la jerarquía.
+  isActive: boolean;                 // Indica si la cuenta puede ser usada en nuevas transacciones.
+  isSystemAccount: boolean;          // (Existente) Indica si es una cuenta de sistema que no puede ser eliminada/modificada por el usuario.
+  balance: number;                   // (Existente) Saldo actual de la cuenta. Podría ser un campo calculado.
+  currency: string;                  // (Existente) Moneda principal de la cuenta (e.g., 'USD', 'DOP').
+  organizationId: string;            // (Existente) ID de la organización a la que pertenece la cuenta.
+
+  // --- NUEVO: VERSIONADO Y VIGENCIA ---
+  version: number;                   // Versión del plan de cuentas a la que pertenece esta instancia (e.g., 1, 2, 3).
+  lineageId: string;                 // ID único que agrupa todas las versiones de una misma cuenta a través del tiempo.
+  effectiveFrom: string;             // Fecha de inicio de vigencia de esta versión de la cuenta (formato ISO "YYYY-MM-DDTHH:mm:ssZ").
+  effectiveTo?: string | null;       // Fecha de fin de vigencia. Nulo significa que sigue vigente.
+
+  // --- NUEVO: JERARQUÍAS Y NATURALEZA ---
+  hierarchyType: HierarchyType;      // A qué jerarquía (Legal, Management, Fiscal) pertenece esta instancia de la cuenta.
+  isPostable: boolean;               // `true`: es una cuenta imputable (permite asientos). `false`: es una cuenta sumaria/de agrupación (no permite asientos).
+  nature: AccountNature;             // Naturaleza contable de la cuenta (DEBIT o CREDIT).
+  level?: number;                    // Nivel de profundidad en la jerarquía (puede ser calculado en el frontend o venir del backend).
+
+  // --- NUEVO: ATRIBUTOS Y MAPE_OS CONTABLES ---
+  statementMapping?: {
+    balanceSheetCategory?: string;   // Categoría en el Balance General (e.g., "Activos Corrientes").
+    incomeStatementCategory?: string;// Categoría en el Estado de Resultados (e.g., "Gastos de Venta").
+    cashFlowCategory?: CashFlowCategory; // Categoría para el Estado de Flujo de Efectivo.
+  };
+  taxMapping?: {
+    [taxSystem: string]: { code: string; form: string; }; // Mapeo a códigos fiscales. e.g., { 'DGII_DO': { code: 'A01', form: 'IT-1' } }.
+  };
+  isFxRevaluation: boolean;          // Marcar como `true` si es una cuenta de ajuste por diferencia de cambio (CTA/FX).
+  isRetainedEarnings: boolean;       // Marcar como `true` si es la cuenta de resultados acumulados/utilidades retenidas.
+  isClosingAccount: boolean;         // Marcar como `true` si es la cuenta puente para el cierre de resultados del período.
+
+  // --- NUEVO: FLAGS DE CONTROL ---
+  requiresReconciliation: boolean;   // `true` si la cuenta debe incluirse en procesos de conciliación bancaria o de saldos.
+  isCashOrBank: boolean;             // `true` si la cuenta representa efectivo o una cuenta bancaria.
+  allowsIntercompany: boolean;       // `true` si la cuenta puede ser usada en transacciones entre compañías del mismo grupo.
+  requiredDimensions?: RequiredDimension[]; // Lista de dimensiones de negocio que son obligatorias al imputar en esta cuenta.
+  blockedSources?: BlockedSource[];  // Lista de orígenes de asientos que están bloqueados para esta cuenta.
+
+  // --- NUEVO: MULTI-ENTIDAD Y MULTI-GAAP ---
+  applicableCompanyIds: string[];    // Array de IDs de las compañías/entidades que tienen permiso para usar esta cuenta.
+  gaapMapping?: { [key in GaapStandard]?: string }; // Mapeo a códigos de cuenta equivalentes en otros estándares contables.
+
+  // --- AUDITORÍA (Campos existentes, mantenidos por consistencia) ---
+  createdAt: string;                 // Fecha de creación del registro (formato ISO).
+  updatedAt: string;                 // Fecha de la última modificación (formato ISO).
+  createdBy?: string;                // (Nuevo/Opcional) ID o nombre del usuario que creó la cuenta.
+  updatedBy?: string;                // (Nuevo/Opcional) ID o nombre del último usuario que modificó la cuenta.
+
+  // --- PROPIEDADES PARA LA INTERFAZ DE USUARIO (UI) ---
+  // Estas propiedades no necesariamente vienen del backend, pero son útiles para manejar el estado en el frontend.
+  children?: Account[];              // (Existente) Array de cuentas hijas para construir la estructura de árbol.
 }
-
-/**
- * @description DTO (Data Transfer Object) for creating a new account.
- * DTO para crear una nueva cuenta.
- */
-export type CreateAccountDto = Omit<Account, 'id' | 'balance' | 'isActive' | 'isSystemAccount' | 'createdAt' | 'updatedAt' | 'organizationId' | 'children'>;
-
-// --- Translation Mappings / Mapeo de Traducciones ---
-
-// 1. Definir los idiomas soportados de forma explícita
-export type Language = 'en' | 'es';
-
-// 2. Crear un tipo para un mapa de traducciones que TypeScript pueda entender
-export type TranslationMap = { [key in Language]: string };
-
-// 3. Aplicar los tipos corregidos a los objetos de traducción
-export const AccountTypeTranslations: { [key in AccountType]: TranslationMap } = {
-  [AccountType.ASSET]: { en: 'Asset', es: 'Activo' },
-  [AccountType.LIABILITY]: { en: 'Liability', es: 'Pasivo' },
-  [AccountType.EQUITY]: { en: 'Equity', es: 'Patrimonio' },
-  [AccountType.REVENUE]: { en: 'Revenue', es: 'Ingresos' },
-  [AccountType.EXPENSE]: { en: 'Expense', es: 'Gastos' },
-};
-
-export const AccountCategoryTranslations: { [key in AccountCategory]: TranslationMap } = {
-  [AccountCategory.CURRENT_ASSET]: { en: 'Current Asset', es: 'Activo Corriente' },
-  [AccountCategory.NON_CURRENT_ASSET]: { en: 'Non-Current Asset', es: 'Activo No Corriente' },
-  [AccountCategory.CURRENT_LIABILITY]: { en: 'Current Liability', es: 'Pasivo Corriente' },
-  [AccountCategory.NON_CURRENT_LIABILITY]: { en: 'Non-Current Liability', es: 'Pasivo No Corriente' },
-  [AccountCategory.OWNERS_EQUITY]: { en: 'Owner\'s Equity', es: 'Patrimonio de Propietarios' },
-  [AccountCategory.RETAINED_EARNINGS]: { en: 'Retained Earnings', es: 'Ganancias Retenidas' },
-  [AccountCategory.OPERATING_REVENUE]: { en: 'Operating Revenue', es: 'Ingresos Operativos' },
-  [AccountCategory.NON_OPERATING_REVENUE]: { en: 'Non-Operating Revenue', es: 'Ingresos No Operativos' },
-  [AccountCategory.OPERATING_EXPENSE]: { en: 'Operating Expense', es: 'Gasto Operativo' },
-  [AccountCategory.NON_OPERATING_EXPENSE]: { en: 'Non-Operating Expense', es: 'Gasto No Operativo' },
-  [AccountCategory.COST_OF_GOODS_SOLD]: { en: 'Cost of Goods Sold', es: 'Costo de Bienes Vendidos' },
-};

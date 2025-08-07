@@ -1,149 +1,201 @@
-import { Injectable, inject, signal, computed, OnDestroy } from '@angular/core';
-import { Subject, takeUntil } from 'rxjs';
+/**
+ * =====================================================================================
+ * ARCHIVO: src/app/core/state/chart-of-accounts.state.ts
+ * =====================================================================================
+ * DESCRIPCIÓN:
+ * Este servicio de estado (`StateService`) actúa como la única fuente de verdad (Single
+ * Source of Truth) para todo lo relacionado con el Plan de Cuentas. Utiliza Angular
+ * Signals para gestionar el estado de forma reactiva.
+ *
+ * RESPONSABILIDADES:
+ * - Almacenar el estado actual de los filtros (versión, jerarquía, búsqueda).
+ * - Cargar y almacenar la lista de cuentas desde el backend.
+ * - Procesar las cuentas para su visualización (construir árbol, aplanar).
+ * - Exponer el estado a través de signals para que los componentes puedan consumirlo
+ * de manera reactiva y eficiente.
+ * - Centralizar las acciones que modifican el estado (e.g., cambiar de versión).
+ * =====================================================================================
+ */
+
+import { Injectable, computed, signal, effect, OnDestroy, inject } from '@angular/core';
+import { Subject } from 'rxjs';
+import { takeUntil } from 'rxjs/operators';
+// import { ChartOfAccountsService } from '../services/chart-of-accounts.service';
+// import { TreeService } from '../services/tree.service';
+import { Account, HierarchyType } from '../models/account.model';
+import { FlattenedAccount } from '../models/flattened-account.model';
 import { ChartOfAccountsService } from '../services/chart-of-accounts';
 import { TreeService } from '../services/tree';
-import { Account, AccountType, AccountTypeTranslations } from '../models/account.model';
-import { FlattenedAccount } from '../models/flattened-account.model';
 
-@Injectable({
-  providedIn: 'root'
-})
+@Injectable({ providedIn: 'root' })
 export class ChartOfAccountsStateService implements OnDestroy {
-  private destroy$ = new Subject<void>();
-  private chartOfAccountsService = inject(ChartOfAccountsService);
-  private treeService = inject(TreeService);
+  // --- INYECCIÓN DE DEPENDENCIAS ---
+  private readonly chartOfAccountsService = inject(ChartOfAccountsService);
+  private readonly treeService = inject(TreeService);
 
-  // Estado centralizado
-  public accounts = signal<Account[]>([]);
-  public loading = signal(true);
-  public error = signal<string | null>(null);
-  public expandedIds = signal<Set<string>>(new Set());
-  public searchQuery = signal('');
-  public selectedType = signal<AccountType | 'all'>('all');
+  // --- SEÑALES DE ESTADO (STATE SIGNALS) ---
+  // Las señales son los bloques de construcción del estado reactivo.
 
-  // Nuevas señales para mejorar performance
-  public reloading = signal(false);
-  public expandingAll = signal(false);
-  public collapsingAll = signal(false);
+  // Estado de carga y errores
+  public readonly isLoading = signal<boolean>(true);
+  public readonly error = signal<string | null>(null);
 
-  // Memoización de cuentas aplanadas sin filtros
-  private flattenedAccounts = signal<FlattenedAccount[]>([]);
+  // Filtros y selecciones del usuario
+  public readonly selectedVersion = signal<number>(0); // 0 indica que aún no se ha cargado una versión válida
+  public readonly selectedHierarchy = signal<HierarchyType>('LEGAL');
+  public readonly searchTerm = signal<string>('');
+  public readonly accountTypeFilter = signal<string[]>([]);
 
-  // Traducciones
-  public accountTypeTranslations = AccountTypeTranslations;
-  public accountTypes = Object.values(AccountType);
+  // Datos crudos y procesados
+  public readonly versions = signal<number[]>([]); // Lista de versiones disponibles (e.g., [1, 2, 3])
+  private readonly allAccounts = signal<Account[]>([]); // Almacén de cuentas "crudas" de la versión/jerarquía actual
+  public readonly flattenedAccounts = signal<FlattenedAccount[]>([]); // Cuentas aplanadas para la vista de árbol
 
-  // Computed: Cuentas visibles según filtros
-  public displayAccounts = computed<FlattenedAccount[]>(() => {
-    const query = this.searchQuery().toLowerCase();
-    const type = this.selectedType();
-    const expanded = this.expandedIds();
+  // --- SEÑALES COMPUTADAS (COMPUTED SIGNALS) ---
+  // Se recalculan automáticamente cuando una de sus señales dependientes cambia.
 
-    return this.flattenedAccounts().filter(account => {
-      const matchesType = type === 'all' || account.type === type;
-      const matchesQuery =
-        query === '' ||
-        account.name.toLowerCase().includes(query) ||
-        account.code.toLowerCase().includes(query);
+  /**
+   * La lista de cuentas que se debe mostrar en la UI.
+   * Aplica los filtros de búsqueda y tipo sobre la lista aplanada de cuentas.
+   */
+  public readonly displayAccounts = computed<FlattenedAccount[]>(() => {
+    const flatAccounts = this.flattenedAccounts();
+    const term = this.searchTerm().toLowerCase();
+    const types = this.accountTypeFilter();
 
-      const parentExpanded = this.isParentExpanded(account);
+    // Si no hay filtros activos, devolver la lista completa para un rendimiento óptimo.
+    if (!term && types.length === 0) {
+      return flatAccounts;
+    }
 
-      return matchesType && matchesQuery && parentExpanded;
+    // Aplicar filtros
+    return flatAccounts.filter(account => {
+      const nameMatch = account.name.toLowerCase().includes(term);
+      const codeMatch = account.code.toLowerCase().includes(term);
+      const typeMatch = types.length > 0 ? types.includes(account.type) : true;
+      
+      return (nameMatch || codeMatch) && typeMatch;
     });
   });
 
+  private readonly destroy$ = new Subject<void>();
+
   constructor() {
-    this.loadAccounts();
-  }
-
-  // Cargar cuentas desde el servicio
-  async loadAccounts(): Promise<void> {
-    this.reloading.set(true);
-
-    this.chartOfAccountsService.getAccounts()
-      .pipe(takeUntil(this.destroy$))
-      .subscribe({
-        next: (accounts) => {
-          this.accounts.set(accounts);
-          this.updateFlattenedAccounts();
-          this.loading.set(false);
-        },
-        error: (err) => {
-          console.error('Error loading accounts', err);
-          this.error.set('Failed to load accounts. Please try again later.');
-          this.loading.set(false);
-        }
-      });
-
-    this.reloading.set(false);
-  }
-
-  // Actualiza la señal de cuentas aplanadas (sin filtros)
-  private updateFlattenedAccounts(): void {
-    this.flattenedAccounts.set(
-      this.treeService['flattenTree'](this.accounts())
-    );
-  }
-
-  // Determina si el padre está expandido (para visibilidad)
-  private isParentExpanded(account: FlattenedAccount): boolean {
-    if (!account.parentId) return true;
-    return this.expandedIds().has(account.parentId);
-  }
-
-  // Alternar estado expandido de una cuenta
-  toggleExpand(accountId: string): void {
-    this.expandedIds.update(ids => {
-      const newSet = new Set(ids);
-      if (newSet.has(accountId)) {
-        newSet.delete(accountId);
-      } else {
-        newSet.add(accountId);
+    // `effect` es una función reactiva que se ejecuta cuando cualquiera de las
+    // señales leídas dentro de ella cambia. Es perfecto para manejar efectos
+    // secundarios como llamadas a una API.
+    effect(() => {
+      const version = this.selectedVersion();
+      const hierarchy = this.selectedHierarchy();
+      
+      // Solo cargar si se ha seleccionado una versión válida (diferente de 0)
+      if (version > 0) {
+        this.loadAccounts(version, hierarchy);
       }
-      return newSet;
+    });
+
+    // Carga inicial de la aplicación
+    this.loadInitialData();
+  }
+
+  // --- MÉTODOS PÚBLICOS (ACCIONES PARA MODIFICAR EL ESTADO) ---
+
+  /**
+   * Carga los datos iniciales de la aplicación, principalmente la lista de versiones
+   * disponibles del plan de cuentas.
+   */
+  public loadInitialData(): void {
+    this.isLoading.set(true);
+    this.error.set(null);
+    this.chartOfAccountsService.getVersions().pipe(takeUntil(this.destroy$)).subscribe({
+      next: (versions) => {
+        this.versions.set(versions);
+        if (versions.length > 0) {
+          // Seleccionar la versión más reciente por defecto.
+          // Esto disparará automáticamente el `effect` para cargar las cuentas.
+          this.selectedVersion.set(Math.max(...versions));
+        } else {
+          // No hay versiones, el estado de carga termina y se muestra un error.
+          this.isLoading.set(false);
+          this.error.set('No se encontraron versiones del plan de cuentas.');
+        }
+      },
+      error: (err) => {
+        this.error.set('Error crítico: No se pudieron cargar las versiones del plan de cuentas.');
+        console.error(err);
+        this.isLoading.set(false);
+      }
     });
   }
 
-  // Actualizar búsqueda
-  setSearchQuery(query: string): void {
-    this.searchQuery.set(query);
-  }
-
-  // Actualizar tipo seleccionado
-  setSelectedType(type: AccountType | 'all'): void {
-    this.selectedType.set(type);
-  }
-
-  // Expandir todas las cuentas
-  expandAll(): void {
-    this.expandingAll.set(true);
-    const allIds = this.getAllAccountIds(this.accounts());
-    this.expandedIds.set(new Set(allIds));
-    this.expandingAll.set(false);
-  }
-
-  // Colapsar todas las cuentas
-  collapseAll(): void {
-    this.expandedIds.set(new Set());
-  }
-
-  // Obtener todos los IDs de cuenta recursivamente
-  private getAllAccountIds(accounts: Account[]): string[] {
-    let ids: string[] = [];
-
-    for (const account of accounts) {
-      ids.push(account.id);
-      if (account.children) {
-        ids = ids.concat(this.getAllAccountIds(account.children));
-      }
+  /**
+   * Acción para cambiar la versión seleccionada.
+   * El `effect` se encargará automáticamente de recargar los datos.
+   * @param version El nuevo número de versión a seleccionar.
+   */
+  public selectVersion(version: number): void {
+    if (this.selectedVersion() !== version) {
+      this.selectedVersion.set(version);
     }
-
-    return ids;
   }
 
-  // Cleanup al destruir el servicio
-  ngOnDestroy(): void {
+  /**
+   * Acción para cambiar la jerarquía seleccionada.
+   * El `effect` se encargará automáticamente de recargar los datos.
+   * @param hierarchy El nuevo tipo de jerarquía a seleccionar.
+   */
+  public selectHierarchy(hierarchy: HierarchyType): void {
+    if (this.selectedHierarchy() !== hierarchy) {
+      this.selectedHierarchy.set(hierarchy);
+    }
+  }
+
+  /**
+   * Acción para forzar una recarga de los datos del plan de cuentas actual.
+   * Útil después de una operación de creación, edición o importación masiva.
+   */
+  public refreshAccounts(): void {
+    if (this.selectedVersion() > 0) {
+      this.loadAccounts(this.selectedVersion(), this.selectedHierarchy());
+    }
+  }
+
+  /**
+   * Limpia las suscripciones para prevenir fugas de memoria cuando el servicio es destruido.
+   */
+  public ngOnDestroy(): void {
     this.destroy$.next();
     this.destroy$.complete();
+  }
+
+  // --- MÉTODOS PRIVADOS DE LÓGICA INTERNA ---
+
+  /**
+   * Orquesta la carga de la lista de cuentas para una versión y jerarquía específicas.
+   * @param version La versión a cargar.
+   * @param hierarchy La jerarquía a cargar.
+   */
+  private loadAccounts(version: number, hierarchy: HierarchyType): void {
+    this.isLoading.set(true);
+    this.error.set(null);
+    this.chartOfAccountsService.getAccounts(version, hierarchy)
+      .pipe(takeUntil(this.destroy$))
+      .subscribe({
+        next: (accounts) => {
+          this.allAccounts.set(accounts);
+          // Una vez cargadas las cuentas, se procesan para la vista de árbol.
+          const tree = this.treeService.buildTree(accounts);
+          const flattenedTree = this.treeService.flattenTree(tree);
+          this.flattenedAccounts.set(flattenedTree);
+          this.isLoading.set(false);
+        },
+        error: (err) => {
+          this.error.set('No se pudieron cargar las cuentas para la selección actual.');
+          console.error(err);
+          this.allAccounts.set([]);
+          this.flattenedAccounts.set([]);
+          this.isLoading.set(false);
+        }
+      });
   }
 }

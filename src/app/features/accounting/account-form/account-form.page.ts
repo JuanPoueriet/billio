@@ -1,320 +1,229 @@
-import {
-  Component,
-  inject,
-  OnInit,
-  OnDestroy,
-  ChangeDetectorRef,
-  computed,
-  Signal
-} from '@angular/core';
+/**
+ * =====================================================================================
+ * ARCHIVO: src/app/features/accounting/account-form/account-form.page.ts
+ * =====================================================================================
+ * DESCRIPCIÓN:
+ * Este componente maneja la lógica para el formulario de creación y edición de
+ * cuentas contables. Es responsable de inicializar el formulario con sus
+ * validaciones, cargar los datos de una cuenta existente para su edición, y
+ * enviar los datos al servicio para su persistencia.
+ * Utiliza Reactive Forms de Angular para una gestión robusta del estado del formulario.
+ * =====================================================================================
+ */
+
+import { Component, OnInit, inject, ChangeDetectionStrategy, signal, computed } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { Router, ActivatedRoute, RouterLink } from '@angular/router';
-import {
-  FormBuilder,
-  FormGroup,
-  FormControl,
-  ReactiveFormsModule,
-  Validators,
-  FormsModule
-} from '@angular/forms';
-import {
-  LucideAngularModule,
-  Save,
-  X,
-  ChevronDown,
-  ChevronUp,
-  Loader
-} from 'lucide-angular';
+import { FormBuilder, FormGroup, Validators, ReactiveFormsModule, FormArray } from '@angular/forms';
+import { ActivatedRoute, Router, RouterLink } from '@angular/router';
+import { ChartOfAccountsService } from '../../../core/services/chart-of-accounts';
+import { take } from 'rxjs/operators';
 import {
   AccountType,
-  AccountCategory,
-  AccountCategoryTranslations,
-  CreateAccountDto,
-  Account
+  AccountNature,
+  HierarchyType,
+  CashFlowCategory,
+  RequiredDimension
 } from '../../../core/models/account.model';
-import { ChartOfAccountsService } from '../../../core/services/chart-of-accounts';
-import { TreeService } from '../../../core/services/tree';
-import { NotificationService } from '../../../core/services/notification';
-import { LanguageService } from '../../../core/services/language';
-import { Subscription, forkJoin, of } from 'rxjs';
-import { ThemeService } from '../../../core/services/theme';
+import { ChartOfAccountsStateService } from '../../../core/state/chart-of-accounts.state';
 
 @Component({
   selector: 'app-account-form-page',
+  standalone: true,
+  imports: [
+    CommonModule,
+    ReactiveFormsModule, // Importante para usar [formGroup] y otros
+    RouterLink
+  ],
   templateUrl: './account-form.page.html',
   styleUrls: ['./account-form.page.scss'],
-  standalone: true,
-  imports: [CommonModule, RouterLink, ReactiveFormsModule, LucideAngularModule, FormsModule],
+  changeDetection: ChangeDetectionStrategy.OnPush,
 })
-export class AccountFormPage implements OnInit, OnDestroy {
-  private fb = inject(FormBuilder);
-  private router = inject(Router);
-  private route = inject(ActivatedRoute);
-  private chartOfAccountsService = inject(ChartOfAccountsService);
-  private treeService = inject(TreeService);
-  private notificationService = inject(NotificationService);
-  private languageService = inject(LanguageService);
-  private cdr = inject(ChangeDetectorRef);
-  private themeService = inject(ThemeService);
-  private subscriptions: Subscription[] = [];
+export class AccountFormPage implements OnInit {
+  // --- INYECCIÓN DE DEPENDENCIAS ---
+  private readonly fb = inject(FormBuilder);
+  private readonly router = inject(Router);
+  private readonly route = inject(ActivatedRoute);
+  private readonly coaService = inject(ChartOfAccountsService);
+  private readonly coaState = inject(ChartOfAccountsStateService);
 
-  // Iconos
-  protected readonly SaveIcon = Save;
-  protected readonly CancelIcon = X;
-  protected readonly ChevronDownIcon = ChevronDown;
-  protected readonly ChevronUpIcon = ChevronUp;
-  protected readonly LoaderIcon = Loader;
+  // --- ESTADO DEL COMPONENTE ---
+  public accountForm!: FormGroup;
+  public isEditing = signal(false);
+  public isLoading = signal(true);
+  public activeTab = signal('general');
+  private accountId: string | null = null;
 
-  // Estados
-  public loading = false;
-  public saving = false;
-  public isEditMode = false;
-  public currentAccountId: string | null = null;
-  public parentAccounts: any[] = [];
-  public showParentDropdown = false;
-  public filteredParentAccounts: any[] = [];
-  public parentSearchQuery = '';
-  public currentLang = this.languageService.currentLang;
-  public themeMode = this.themeService.themeMode;
+  // --- DATOS PARA SELECTORES (DROPDOWNS) Y LISTAS ---
+  public readonly accountTypes: AccountType[] = ['ASSET', 'LIABILITY', 'EQUITY', 'REVENUE', 'EXPENSE'];
+  public readonly accountNatures: AccountNature[] = ['DEBIT', 'CREDIT'];
+  public readonly hierarchyTypes: HierarchyType[] = ['LEGAL', 'MANAGEMENT', 'FISCAL'];
+  public readonly cashFlowCategories: CashFlowCategory[] = ['OPERATING', 'INVESTING', 'FINANCING', 'NONE'];
+  public readonly allDimensions: RequiredDimension[] = ['COST_CENTER', 'PROJECT', 'SEGMENT'];
+  
+  // Opciones para el selector de "Cuenta Padre", excluyendo las cuentas sumarias (no imputables)
+  public readonly parentAccountOptions = computed(() => 
+    this.coaState.flattenedAccounts().filter(acc => !acc.isPostable)
+  );
 
-  // Enums y opciones
-  public accountTypeOptions: { value: AccountType, label: string }[] = [];
-  public categoryMap: Record<AccountType, AccountCategory[]> = {
-    [AccountType.ASSET]: [
-      AccountCategory.CURRENT_ASSET,
-      AccountCategory.NON_CURRENT_ASSET
-    ],
-    [AccountType.LIABILITY]: [
-      AccountCategory.CURRENT_LIABILITY,
-      AccountCategory.NON_CURRENT_LIABILITY
-    ],
-    [AccountType.EQUITY]: [
-      AccountCategory.OWNERS_EQUITY,
-      AccountCategory.RETAINED_EARNINGS
-    ],
-    [AccountType.REVENUE]: [
-      AccountCategory.OPERATING_REVENUE,
-      AccountCategory.NON_OPERATING_REVENUE
-    ],
-    [AccountType.EXPENSE]: [
-      AccountCategory.OPERATING_EXPENSE,
-      AccountCategory.NON_OPERATING_EXPENSE,
-      AccountCategory.COST_OF_GOODS_SOLD
-    ]
-  };
-
-  // Formulario
-  public accountForm: FormGroup = this.fb.group({
-    code: new FormControl('', [
-      Validators.required,
-      Validators.pattern(/^[0-9]+(\.[0-9]+)*$/),
-      Validators.maxLength(20)
-    ]),
-    name: new FormControl('', [
-      Validators.required,
-      Validators.maxLength(100)
-    ]),
-    type: new FormControl(null as AccountType | null, Validators.required),
-    category: new FormControl(null as AccountCategory | null, Validators.required),
-    parentId: new FormControl(null as string | null),
-    description: new FormControl('', Validators.maxLength(500)),
-    isActive: new FormControl(true),
-    currency: new FormControl('USD', Validators.required) // <-- Añadido, valor por defecto
-  });
-
-  // Computed: Cuenta padre seleccionada
-  public selectedParentAccount = computed(() => {
-    const parentId = this.accountForm.get('parentId')?.value;
-    if (!parentId) return null;
-    return this.parentAccounts.find(acc => acc.id === parentId);
-  });
-
-  // ✅ Nueva señal computada para categorías
-  public accountCategories = computed(() => {
-    const type = this.accountForm.get('type')?.value as AccountType | null;
-    const lang = this.languageService.currentLang();
-
-    if (!type) return [];
-
-    return this.categoryMap[type].map((cat: AccountCategory) => ({
-      value: cat,
-      label: AccountCategoryTranslations[cat][lang as keyof typeof AccountCategoryTranslations[AccountCategory]]
-    }));
-  });
-
-  constructor() {
-    this.accountTypeOptions = Object.values(AccountType).map(type => ({
-      value: type,
-      label: type
-    }));
-  }
-
+  /**
+   * Ciclo de vida ngOnInit. Se ejecuta al inicializar el componente.
+   */
   ngOnInit(): void {
-    this.subscriptions.push(
-      this.route.params.subscribe(params => {
-        if (params['id']) {
-          this.isEditMode = true;
-          this.currentAccountId = params['id'];
-          if (this.currentAccountId) {
-            // Encadenar ambas cargas
-            this.loading = true;
-            forkJoin({
-              parents: this.chartOfAccountsService.getAccounts(),
-              account: this.chartOfAccountsService.getAccountById(this.currentAccountId)
-            }).subscribe({
-              next: ({ parents, account }) => {
-                this.parentAccounts = this.treeService.getSelectableAccounts(
-                  parents,
-                  this.currentAccountId ?? undefined // <-- Corrige el tipo aquí
-                );
-                this.filteredParentAccounts = [...this.parentAccounts];
-                this.accountForm.patchValue({
-                  code: account.code,
-                  name: account.name,
-                  type: account.type,
-                  category: account.category,
-                  parentId: account.parentId,
-                  description: account.description,
-                  isActive: account.isActive
-                });
-                this.loading = false;
-                this.cdr.detectChanges();
-              },
-              error: (err) => {
-                this.notificationService.showError('Failed to load account data');
-                this.loading = false;
-              }
-            });
-          }
-        } else {
-          this.loadParentAccounts();
-        }
-      })
-    );
+    this.initializeForm();
+    this.accountId = this.route.snapshot.paramMap.get('id');
 
-    this.loadParentAccounts();
+    if (this.accountId) {
+      this.isEditing.set(true);
+      this.loadAccountData(this.accountId);
+    } else {
+      // Valores por defecto para una cuenta nueva
+      this.accountForm.patchValue({
+        version: this.coaState.selectedVersion(),
+        hierarchyType: this.coaState.selectedHierarchy(),
+        effectiveFrom: new Date().toISOString().split('T')[0]
+      });
+      this.isLoading.set(false);
+    }
   }
 
-  ngOnDestroy(): void {
-    this.subscriptions.forEach(sub => sub.unsubscribe());
+  /**
+   * Inicializa la estructura del FormGroup con todos los campos y validaciones.
+   */
+  private initializeForm(): void {
+    this.accountForm = this.fb.group({
+      // --- Pestaña: General ---
+      code: ['', [Validators.required, Validators.pattern(/^[a-zA-Z0-9-._]*$/)]],
+      name: ['', [Validators.required, Validators.maxLength(100)]],
+      description: ['', Validators.maxLength(255)],
+      parentId: [null],
+      type: [null as AccountType | null, Validators.required],
+      nature: [null as AccountNature | null, Validators.required],
+      isPostable: [true, Validators.required],
+      isActive: [true, Validators.required],
+
+      // --- Pestaña: Mapeos ---
+      statementMapping: this.fb.group({
+        balanceSheetCategory: [''],
+        incomeStatementCategory: [''],
+        cashFlowCategory: ['NONE' as CashFlowCategory],
+      }),
+
+      // --- Pestaña: Reglas y Control ---
+      requiresReconciliation: [false],
+      isCashOrBank: [false],
+      allowsIntercompany: [false],
+      isFxRevaluation: [false],
+      isRetainedEarnings: [false],
+      isClosingAccount: [false],
+      requiredDimensions: this.fb.array([]),
+
+      // --- Pestaña: Avanzado ---
+      version: [{ value: 1, disabled: true }, Validators.required],
+      hierarchyType: [{ value: 'LEGAL', disabled: true }, Validators.required],
+      effectiveFrom: [null, Validators.required],
+      effectiveTo: [null],
+    });
   }
 
-  loadAccountData(id: string): void {
-    this.loading = true;
-    this.chartOfAccountsService.getAccountById(id).subscribe({
+  /**
+   * Carga los datos de una cuenta existente y puebla el formulario.
+   * @param id El ID de la cuenta a cargar.
+   */
+  private loadAccountData(id: string): void {
+    this.isLoading.set(true);
+    this.coaService.getAccountById(id).pipe(take(1)).subscribe({
       next: (account) => {
-        this.accountForm.patchValue({
-          code: account.code,
-          name: account.name,
-          type: account.type,
-          category: account.category,
-          parentId: account.parentId,
-          description: account.description,
-          isActive: account.isActive
-        });
-        this.loading = false;
-        this.cdr.detectChanges();
+        // Formatear fechas para los inputs de tipo 'date'
+        if (account.effectiveFrom) {
+          account.effectiveFrom = account.effectiveFrom.split('T')[0];
+        }
+        if (account.effectiveTo) {
+          account.effectiveTo = account.effectiveTo.split('T')[0];
+        }
+        this.accountForm.patchValue(account);
+        
+        this.populateFormArray('requiredDimensions', account.requiredDimensions || []);
+
+        // Reglas de inmutabilidad: Código y Tipo no se pueden editar.
+        this.accountForm.get('code')?.disable();
+        this.accountForm.get('type')?.disable();
+        
+        this.isLoading.set(false);
       },
       error: (err) => {
-        console.error('Error loading account', err);
-        this.notificationService.showError('Failed to load account data');
-        this.loading = false;
+        console.error('Error al cargar la cuenta', err);
+        this.isLoading.set(false);
+        this.router.navigate(['/accounting/chart-of-accounts']);
       }
     });
   }
 
-  loadParentAccounts(): void {
-    this.loading = true;
-    this.chartOfAccountsService.getAccounts().subscribe({
-      next: (accounts) => {
-        this.parentAccounts = this.treeService.getSelectableAccounts(
-          accounts,
-          this.isEditMode && this.currentAccountId ? this.currentAccountId : undefined
-        );
-        this.filteredParentAccounts = [...this.parentAccounts];
-        this.loading = false;
-        this.cdr.detectChanges();
-      },
-      error: (err) => {
-        console.error('Error loading parent accounts', err);
-        this.notificationService.showError('Failed to load parent accounts');
-        this.loading = false;
-      }
-    });
+  /**
+   * Helper para poblar un FormArray con datos.
+   */
+  private populateFormArray(arrayName: string, data: any[]): void {
+    const formArray = this.accountForm.get(arrayName) as FormArray;
+    formArray.clear();
+    data.forEach(item => formArray.push(this.fb.control(item)));
   }
 
-  toggleParentDropdown(): void {
-    this.showParentDropdown = !this.showParentDropdown;
-    if (this.showParentDropdown) {
-      this.filterParentAccounts();
-    }
-  }
-
-  filterParentAccounts(): void {
-    if (!this.parentSearchQuery) {
-      this.filteredParentAccounts = [...this.parentAccounts];
-      return;
-    }
-
-    const query = this.parentSearchQuery.toLowerCase();
-    this.filteredParentAccounts = this.parentAccounts.filter(account =>
-      account.name.toLowerCase().includes(query) ||
-      account.code.toLowerCase().includes(query)
-    );
-  }
-
-  selectParentAccount(account: any | null): void {
-    if (account && account.isDisabled) return; // <--- Previene selección
-    this.accountForm.get('parentId')?.setValue(account ? account.id : null);
-    this.showParentDropdown = false;
-    this.parentSearchQuery = '';
-  }
-
-  getSelectedParentDisplay(): string {
-    const parent = this.selectedParentAccount();
-    if (!parent) return 'None (Top Level Account)';
-    return `${parent.code} - ${parent.name}`;
-  }
-
-  saveAccount(): void {
+  /**
+   * Se ejecuta al enviar el formulario.
+   */
+  onSave(): void {
     if (this.accountForm.invalid) {
       this.accountForm.markAllAsTouched();
-      this.notificationService.showError('Please fill all required fields correctly');
+      // Opcional: alertar al usuario o cambiar a la primera pestaña con error.
       return;
     }
 
-    this.saving = true;
-    const formValue = this.accountForm.value;
+    this.isLoading.set(true);
+    const formData = this.accountForm.getRawValue();
 
-    const accountData: CreateAccountDto = {
-      code: formValue.code,
-      name: formValue.name,
-      type: formValue.type,
-      category: formValue.category,
-      parentId: formValue.parentId || null,
-      description: formValue.description || null,
-      currency: formValue.currency // <-- Añadido
-    };
+    const saveOperation = this.isEditing()
+      ? this.coaService.updateAccount(this.accountId!, formData)
+      : this.coaService.createAccount(formData);
 
-    const operation = this.isEditMode && this.currentAccountId
-      ? this.chartOfAccountsService.updateAccount(this.currentAccountId, accountData)
-      : this.chartOfAccountsService.createAccount(accountData);
-
-    operation.subscribe({
-      next: (account) => {
-        this.saving = false;
-        this.notificationService.showSuccess(
-          `Account ${this.isEditMode ? 'updated' : 'created'} successfully`
-        );
-        this.router.navigate(['/app/accounting/chart-of-accounts']);
+    saveOperation.pipe(take(1)).subscribe({
+      next: () => {
+        this.coaState.refreshAccounts();
+        this.router.navigate(['/accounting/chart-of-accounts']);
       },
       error: (err) => {
-        this.saving = false;
-        console.error('Save failed', err);
-        this.notificationService.showError(
-          `Failed to ${this.isEditMode ? 'update' : 'create'} account: ${err.error?.message || 'Unknown error'}`
-        );
+        console.error('Error al guardar la cuenta', err);
+        this.isLoading.set(false);
       }
     });
+  }
+
+  /**
+   * Maneja el cambio en los checkboxes de 'Dimensiones Requeridas'.
+   */
+  onDimensionChange(event: Event): void {
+    const target = event.target as HTMLInputElement;
+    const dimensionsArray = this.accountForm.get('requiredDimensions') as FormArray;
+
+    if (target.checked) {
+      dimensionsArray.push(this.fb.control(target.value));
+    } else {
+      const index = dimensionsArray.controls.findIndex(x => x.value === target.value);
+      if (index !== -1) {
+        dimensionsArray.removeAt(index);
+      }
+    }
+  }
+
+  /**
+   * Verifica si una dimensión está seleccionada para el binding en el HTML.
+   */
+  isDimensionSelected(dimension: RequiredDimension): boolean {
+    return (this.accountForm.get('requiredDimensions') as FormArray).value.includes(dimension);
+  }
+
+  /**
+   * Navega de vuelta a la lista.
+   */
+  onCancel(): void {
+    this.router.navigate(['/accounting/chart-of-accounts']);
   }
 }

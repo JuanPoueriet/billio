@@ -1,184 +1,171 @@
-<div class="view-container" [class.dark-theme]="themeMode() === 'dark'">
-    <form [formGroup]="accountForm" (ngSubmit)="saveAccount()">
-        <div class="view-header">
-            <div class="header-content">
-                <h1>{{ isEditMode ? 'Edit Account' : 'Create New Account' }}</h1>
-                <p>{{ isEditMode ? 'Modify the details of this account' : 'Define the properties of your new account' }}
-                </p>
+<div class="page-container">
+  <!-- Encabezado de la Página -->
+  <div class="page-header">
+    <h1>
+      <i [class]="isEditing() ? 'fas fa-pencil-alt' : 'fas fa-plus-circle'"></i>
+      {{ isEditing() ? 'Editar Cuenta Contable' : 'Crear Nueva Cuenta' }}
+    </h1>
+    <a routerLink="/accounting/chart-of-accounts" class="btn btn-secondary">
+      <i class="fas fa-times"></i> Cancelar
+    </a>
+  </div>
+
+  <!-- Contenedor del Formulario -->
+  <form [formGroup]="accountForm" (ngSubmit)="onSave()" class="form-container card" *ngIf="!isLoading(); else loadingTemplate">
+    <!-- Navegación de Pestañas -->
+    <div class="tab-header">
+      <button type="button" class="tab-link" [class.active]="activeTab() === 'general'" (click)="activeTab.set('general')">
+        <i class="fas fa-info-circle"></i> General
+      </button>
+      <button type="button" class="tab-link" [class.active]="activeTab() === 'mappings'" (click)="activeTab.set('mappings')">
+        <i class="fas fa-project-diagram"></i> Mapeos
+      </button>
+      <button type="button" class="tab-link" [class.active]="activeTab() === 'rules'" (click)="activeTab.set('rules')">
+        <i class="fas fa-cogs"></i> Reglas y Control
+      </button>
+      <button type="button" class="tab-link" [class.active]="activeTab() === 'advanced'" (click)="activeTab.set('advanced')">
+        <i class="fas fa-star"></i> Avanzado
+      </button>
+    </div>
+
+    <!-- Contenido de las Pestañas -->
+    <div class="tab-content">
+      <!-- Pestaña 1: General -->
+      <section *ngIf="activeTab() === 'general'">
+        <div class="form-grid">
+          <div class="form-group">
+            <label for="code">Código</label>
+            <input id="code" type="text" formControlName="code" class="form-control" [class.is-invalid]="accountForm.get('code')?.invalid && accountForm.get('code')?.touched">
+          </div>
+          <div class="form-group">
+            <label for="name">Nombre</label>
+            <input id="name" type="text" formControlName="name" class="form-control" [class.is-invalid]="accountForm.get('name')?.invalid && accountForm.get('name')?.touched">
+          </div>
+          <div class="form-group">
+            <label for="type">Tipo de Cuenta</label>
+            <select id="type" formControlName="type" class="form-control" [class.is-invalid]="accountForm.get('type')?.invalid && accountForm.get('type')?.touched">
+              <option [ngValue]="null" disabled>Seleccione un tipo...</option>
+              <option *ngFor="let type of accountTypes" [value]="type">{{ type }}</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label for="nature">Naturaleza</label>
+            <select id="nature" formControlName="nature" class="form-control" [class.is-invalid]="accountForm.get('nature')?.invalid && accountForm.get('nature')?.touched">
+              <option [ngValue]="null" disabled>Seleccione naturaleza...</option>
+              <option *ngFor="let nature of accountNatures" [value]="nature">{{ nature }}</option>
+            </select>
+          </div>
+          <div class="form-group full-width">
+            <label for="parentId">Cuenta Padre (Agrupadora)</label>
+            <select id="parentId" formControlName="parentId" class="form-control">
+              <option [ngValue]="null">Ninguna (Cuenta de Nivel Raíz)</option>
+              <option *ngFor="let acc of parentAccountOptions()" [value]="acc.id">
+                {{ acc.code }} - {{ acc.name }}
+              </option>
+            </select>
+          </div>
+          <div class="form-group full-width">
+            <label for="description">Descripción</label>
+            <textarea id="description" formControlName="description" class="form-control" rows="3"></textarea>
+          </div>
+          <div class="checkbox-group horizontal">
+            <div class="checkbox-item">
+              <input type="checkbox" id="isPostable" formControlName="isPostable">
+              <label for="isPostable">Es Imputable (Permite Asientos)</label>
             </div>
-            <div class="header-actions">
-                <a routerLink="/app/accounting/chart-of-accounts" class="secondary-button">
-                    <lucide-icon [img]="CancelIcon" size="16"></lucide-icon>
-                    <span>Cancel</span>
-                </a>
-                <button type="submit" class="primary-button" [disabled]="accountForm.invalid || saving">
-                    @if (saving) {
-                    <lucide-icon [img]="LoaderIcon" size="16" class="spinning"></lucide-icon>
-                    } @else {
-                    <lucide-icon [img]="SaveIcon" size="16"></lucide-icon>
-                    }
-                    <span>{{ isEditMode ? 'Update Account' : 'Create Account' }}</span>
-                </button>
+            <div class="checkbox-item">
+              <input type="checkbox" id="isActive" formControlName="isActive">
+              <label for="isActive">Está Activa</label>
             </div>
+          </div>
         </div>
+      </section>
 
-        @if (loading) {
-        <div class="loading-overlay">
-            <lucide-icon [img]="LoaderIcon" size="32" class="spinning"></lucide-icon>
-            <p>Loading account data...</p>
+      <!-- Pestaña 2: Mapeos -->
+      <section *ngIf="activeTab() === 'mappings'" formGroupName="statementMapping">
+        <h4>Mapeo a Estados Financieros</h4>
+        <div class="form-grid">
+          <div class="form-group">
+            <label for="balanceSheetCategory">Categoría en Balance General</label>
+            <input id="balanceSheetCategory" type="text" formControlName="balanceSheetCategory" class="form-control">
+          </div>
+          <div class="form-group">
+            <label for="incomeStatementCategory">Categoría en Estado de Resultados</label>
+            <input id="incomeStatementCategory" type="text" formControlName="incomeStatementCategory" class="form-control">
+          </div>
+          <div class="form-group">
+            <label for="cashFlowCategory">Categoría en Flujo de Efectivo</label>
+            <select id="cashFlowCategory" formControlName="cashFlowCategory" class="form-control">
+              <option *ngFor="let cat of cashFlowCategories" [value]="cat">{{ cat }}</option>
+            </select>
+          </div>
         </div>
-        }
+      </section>
 
-        <div class="form-container card">
-            <div class="form-section">
-                <div class="form-grid">
-                    <!-- Campo: Código -->
-                    <div class="form-field">
-                        <label for="code">Account Code *</label>
-                        <input id="code" type="text" formControlName="code" placeholder="e.g., 1010.01"
-                            [class.invalid]="accountForm.get('code')?.invalid && accountForm.get('code')?.touched">
-                        @if (accountForm.get('code')?.invalid && accountForm.get('code')?.touched) {
-                        <div class="error-message">
-                            @if (accountForm.get('code')?.errors?.['required']) {
-                            <p>Account code is required</p>
-                            }
-                            @if (accountForm.get('code')?.errors?.['pattern']) {
-                            <p>Code must be a numeric hierarchy (e.g., 1010.01)</p>
-                            }
-                            @if (accountForm.get('code')?.errors?.['maxlength']) {
-                            <p>Code cannot exceed 20 characters</p>
-                            }
-                        </div>
-                        }
-                    </div>
-
-                    <!-- Campo: Nombre -->
-                    <div class="form-field">
-                        <label for="name">Account Name *</label>
-                        <input id="name" type="text" formControlName="name" placeholder="e.g., Cash in Bank"
-                            [class.invalid]="accountForm.get('name')?.invalid && accountForm.get('name')?.touched">
-                        @if (accountForm.get('name')?.invalid && accountForm.get('name')?.touched) {
-                        <div class="error-message">
-                            @if (accountForm.get('name')?.errors?.['required']) {
-                            <p>Account name is required</p>
-                            }
-                            @if (accountForm.get('name')?.errors?.['maxlength']) {
-                            <p>Name cannot exceed 100 characters</p>
-                            }
-                        </div>
-                        }
-                    </div>
-
-                    <!-- Campo: Tipo de Cuenta -->
-                    <div class="form-field">
-                        <label for="type">Account Type *</label>
-                        <select id="type" formControlName="type"
-                            [class.invalid]="accountForm.get('type')?.invalid && accountForm.get('type')?.touched">
-                            <option value="" disabled>Select Account Type</option>
-                            @for (option of accountTypeOptions; track option.value) {
-                            <option [value]="option.value">{{ option.value }}</option>
-                            }
-                        </select>
-                        @if (accountForm.get('type')?.invalid && accountForm.get('type')?.touched) {
-                        <div class="error-message">
-                            <p>Account type is required</p>
-                        </div>
-                        }
-                    </div>
-
-                    <!-- Campo: Categoría de Cuenta -->
-                    <div class="form-field">
-                        <label for="category">Account Category *</label>
-                        <select id="category" formControlName="category" [disabled]="!accountForm.get('type')?.value"
-                            [class.invalid]="accountForm.get('category')?.invalid && accountForm.get('category')?.touched">
-                            <option value="" disabled>Select Account Category</option>
-                            @for (option of accountCategories(); track option.value) {
-                            <option [value]="option.value">{{ option.label }}</option>
-                            }
-                        </select>
-                        @if (accountForm.get('category')?.invalid && accountForm.get('category')?.touched) {
-                        <div class="error-message">
-                            <p>Account category is required</p>
-                        </div>
-                        }
-                    </div>
-
-                    <!-- Campo: Cuenta Padre -->
-                    <div class="form-field">
-                        <label for="parentId">Parent Account</label>
-                        <div class="custom-select">
-                            <div class="select-header"
-                                [class.invalid]="accountForm.get('parentId')?.invalid && accountForm.get('parentId')?.touched"
-                                (click)="toggleParentDropdown()">
-                                <span>{{ getSelectedParentDisplay() }}</span>
-                                <lucide-icon [img]="showParentDropdown ? ChevronUpIcon : ChevronDownIcon"
-                                    size="16"></lucide-icon>
-                            </div>
-                            @if (showParentDropdown) {
-                            <div class="select-dropdown">
-                                <div class="search-box">
-                                    <input type="text" placeholder="Search parent accounts..."
-                                        [(ngModel)]="parentSearchQuery" (ngModelChange)="filterParentAccounts()">
-                                </div>
-                                <div class="dropdown-item" (click)="selectParentAccount(null)">
-                                    <span>None (Top Level Account)</span>
-                                </div>
-                                @for (parent of filteredParentAccounts; track parent.id) {
-                                <div class="dropdown-item" 
-                                     [class.disabled]="parent.isDisabled"
-                                     [attr.aria-disabled]="parent.isDisabled ? true : null"
-                                     [attr.tabindex]="parent.isDisabled ? -1 : 0"
-                                     [style.pointer-events]="parent.isDisabled ? 'none' : null"
-                                     (click)="selectParentAccount(parent)">
-                                    <span>{{ parent.code }} - {{ parent.name }}</span>
-                                    @if (parent.isDisabled) {
-                                    <span class="badge">Current Account</span>
-                                    }
-                                </div>
-                                }
-                                @if (filteredParentAccounts.length === 0) {
-                                <div class="dropdown-item empty">
-                                    <span>No matching accounts found</span>
-                                </div>
-                                }
-                            </div>
-                            }
-                        </div>
-                    </div>
-
-                    <!-- Campo: Activo -->
-                    <div class="form-field">
-                        <label for="isActive">Active</label>
-                        <label class="toggle-switch">
-                            <input type="checkbox" id="isActive" formControlName="isActive">
-                            <span class="slider"></span>
-                        </label>
-                    </div>
-
-                    <!-- Campo: Descripción -->
-                    <div class="form-field full-width">
-                        <label for="description">Description</label>
-                        <textarea id="description" formControlName="description" rows="3"
-                            placeholder="Add a detailed description for this account..."></textarea>
-                        @if (accountForm.get('description')?.errors?.['maxlength']) {
-                        <div class="error-message">
-                            <p>Description cannot exceed 500 characters</p>
-                        </div>
-                        }
-                    </div>
-
-                    <!-- Campo: Moneda -->
-                    <div class="form-field">
-                        <label for="currency">Currency *</label>
-                        <select id="currency" formControlName="currency">
-                            <option value="USD">USD - US Dollar</option>
-                            <option value="EUR">EUR - Euro</option>
-                            <option value="MXN">MXN - Peso Mexicano</option>
-                            <!-- Agrega más monedas según necesidad -->
-                        </select>
-                    </div>
-                </div>
-            </div>
+      <!-- Pestaña 3: Reglas y Control -->
+      <section *ngIf="activeTab() === 'rules'">
+        <h4>Flags de Control</h4>
+        <div class="checkbox-group">
+          <div class="checkbox-item"><input type="checkbox" id="requiresReconciliation" formControlName="requiresReconciliation"><label for="requiresReconciliation">Requiere Conciliación</label></div>
+          <div class="checkbox-item"><input type="checkbox" id="isCashOrBank" formControlName="isCashOrBank"><label for="isCashOrBank">Es Cuenta de Caja/Banco</label></div>
+          <div class="checkbox-item"><input type="checkbox" id="allowsIntercompany" formControlName="allowsIntercompany"><label for="allowsIntercompany">Permite Transacciones Intercompañía</label></div>
+          <div class="checkbox-item"><input type="checkbox" id="isFxRevaluation" formControlName="isFxRevaluation"><label for="isFxRevaluation">Cuenta de Revaluación FX (CTA)</label></div>
+          <div class="checkbox-item"><input type="checkbox" id="isRetainedEarnings" formControlName="isRetainedEarnings"><label for="isRetainedEarnings">Cuenta de Utilidades Retenidas</label></div>
+          <div class="checkbox-item"><input type="checkbox" id="isClosingAccount" formControlName="isClosingAccount"><label for="isClosingAccount">Cuenta de Cierre de Resultados</label></div>
         </div>
-    </form>
+        <hr>
+        <h4>Dimensiones Obligatorias</h4>
+        <div class="checkbox-group horizontal">
+          <div *ngFor="let dim of allDimensions" class="checkbox-item">
+            <input type="checkbox" [id]="'dim-' + dim" [value]="dim" [checked]="isDimensionSelected(dim)" (change)="onDimensionChange($event)">
+            <label [for]="'dim-' + dim">{{ dim }}</label>
+          </div>
+        </div>
+      </section>
+      
+      <!-- Pestaña 4: Avanzado -->
+      <section *ngIf="activeTab() === 'advanced'">
+        <h4>Vigencia y Versionado</h4>
+        <div class="form-grid">
+          <div class="form-group">
+            <label for="version">Versión del Plan</label>
+            <input id="version" type="number" formControlName="version" class="form-control">
+          </div>
+          <div class="form-group">
+            <label for="hierarchyType">Jerarquía</label>
+            <input id="hierarchyType" type="text" formControlName="hierarchyType" class="form-control">
+          </div>
+          <div class="form-group">
+            <label for="effectiveFrom">Vigente Desde</label>
+            <input id="effectiveFrom" type="date" formControlName="effectiveFrom" class="form-control">
+          </div>
+          <div class="form-group">
+            <label for="effectiveTo">Vigente Hasta</label>
+            <input id="effectiveTo" type="date" formControlName="effectiveTo" class="form-control">
+          </div>
+        </div>
+      </section>
+    </div>
+
+    <!-- Acciones del Formulario -->
+    <div class="form-actions">
+      <button type="button" class="btn btn-secondary" (click)="onCancel()">Cancelar</button>
+      <button type="submit" class="btn btn-primary" [disabled]="accountForm.invalid || isLoading()">
+        <span *ngIf="!isLoading()">
+          <i class="fas fa-save"></i> {{ isEditing() ? 'Guardar Cambios' : 'Crear Cuenta' }}
+        </span>
+        <span *ngIf="isLoading()">
+          <i class="fas fa-spinner fa-spin"></i> Guardando...
+        </span>
+      </button>
+    </div>
+  </form>
+
+  <!-- Template para el estado de carga inicial -->
+  <ng-template #loadingTemplate>
+    <div class="loading-indicator card">
+      <i class="fas fa-spinner fa-spin"></i>
+      <p>Cargando datos de la cuenta...</p>
+    </div>
+  </ng-template>
 </div>

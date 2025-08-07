@@ -1,186 +1,146 @@
-import { 
-  Component, 
-  inject, 
-  OnInit, 
-  OnDestroy, 
-  DestroyRef, 
-  computed,
-  Signal
-} from '@angular/core';
+/**
+ * =====================================================================================
+ * ARCHIVO: src/app/features/accounting/chart-of-accounts/chart-of-accounts.page.ts
+ * =====================================================================================
+ * DESCRIPCIÓN:
+ * Este componente es la página principal para visualizar y gestionar el Plan de Cuentas.
+ * Actúa como la capa de presentación que consume el estado reactivo proporcionado por
+ * `ChartOfAccountsStateService` y delega las acciones del usuario a dicho servicio.
+ *
+ * RESPONSABILIDADES:
+ * - Mostrar la lista jerárquica de cuentas.
+ * - Proveer controles de UI para filtrar por versión, jerarquía y término de búsqueda.
+ * - Permitir la navegación a otras funcionalidades (crear/editar cuenta, operaciones
+ * masivas, fusionar cuentas).
+ * - Mostrar indicadores de carga y mensajes de error basados en el estado.
+ * =====================================================================================
+ */
+
+import { Component, inject, ChangeDetectionStrategy, OnDestroy, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
+import { FormsModule } from '@angular/forms';
 import { Router, RouterLink } from '@angular/router';
 import { ChartOfAccountsStateService } from '../../../core/state/chart-of-accounts.state';
-import { 
-  AccountType, 
-  AccountTypeTranslations 
-} from '../../../core/models/account.model';
-import { FlattenedAccount } from '../../../core/models/flattened-account.model';
-import { 
-  LucideAngularModule, 
-  ChevronDown, 
-  ChevronRight, 
-  Edit, 
-  PlusCircle, 
-  RefreshCw, 
-  ArrowDown, 
-  ArrowUp, 
-  AlertCircle, 
-  FileSearch, 
-  Search
-} from 'lucide-angular';
-import { FormsModule } from '@angular/forms';
-import { toObservable } from '@angular/core/rxjs-interop';
+import { HierarchyType } from '../../../core/models/account.model';
+import { Subject } from 'rxjs';
+import { debounceTime, takeUntil } from 'rxjs/operators';
 
 @Component({
-  selector: 'app-chart-of-accounts',
+  selector: 'app-chart-of-accounts-page',
+  standalone: true,
+  imports: [
+    CommonModule,
+    FormsModule,  // Necesario para [(ngModel)]
+    RouterLink    // Necesario para [routerLink]
+  ],
   templateUrl: './chart-of-accounts.page.html',
   styleUrls: ['./chart-of-accounts.page.scss'],
-  standalone: true,
-  imports: [CommonModule, LucideAngularModule, FormsModule],
+  changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class ChartOfAccountsPage implements OnInit, OnDestroy {
-  // Servicios inyectados
-  public state = inject(ChartOfAccountsStateService);
-  private router = inject(Router);
-  private destroyRef = inject(DestroyRef);
+  // --- INYECCIÓN DE DEPENDENCIAS Y ESTADO ---
+  public readonly state = inject(ChartOfAccountsStateService);
+  private readonly router = inject(Router);
 
-  // Iconos
-  protected readonly ChevronDownIcon = ChevronDown;
-  protected readonly ChevronRightIcon = ChevronRight;
-  protected readonly EditIcon = Edit;
-  protected readonly PlusCircleIcon = PlusCircle;
-  protected readonly RefreshIcon = RefreshCw;
-  protected readonly ExpandAllIcon = ArrowDown;
-  protected readonly CollapseAllIcon = ArrowUp;
-  protected readonly AlertCircleIcon = AlertCircle;
-  protected readonly FileSearchIcon = FileSearch;
-  protected readonly SearchIcon = Search;
-
-  // Estado expuesto desde el servicio
-  public displayAccounts: Signal<FlattenedAccount[]> = this.state.displayAccounts;
-  public loading: Signal<boolean> = this.state.loading;
-  public error: Signal<string | null> = this.state.error;
-  public accountTypeTranslations = AccountTypeTranslations;
-  public accountTypes = Object.values(AccountType);
-  
-  // Variables locales para filtros
-  // public searchInput = '';
-  // public selectedType: AccountType | 'all' = 'all';
-
-  // Estado de carga para acciones
-  public reloading = false;
-  public expandingAll = false;
-  public collapsingAll = false;
-
-  // Computed: Verifica si hay cuentas para mostrar
-  public hasAccountsToDisplay = computed(() => {
-    return !this.loading() && !this.error() && this.displayAccounts().length > 0;
-  });
-
-  // Computed: Verifica si el estado está vacío
-  public isEmptyState = computed(() => {
-    return !this.loading() && !this.error() && this.displayAccounts().length === 0;
-  });
+  // Lógica para el debounce del input de búsqueda
+  private readonly searchSubject = new Subject<string>();
+  private readonly destroy$ = new Subject<void>();
 
   constructor() {
-    // Convertir señales a observables
-    const searchQuery$ = toObservable(this.state.searchQuery);
-    const selectedType$ = toObservable(this.state.selectedType);
-
-    // Sincronizar estado de búsqueda (con tipado explícito)
-    // searchQuery$.subscribe((query: string) => {
-    //   this.searchInput = query;
-    // });
-
-    // Sincronizar tipo seleccionado (con tipado explícito)
-    // selectedType$.subscribe((type: AccountType | 'all') => {
-    //   this.selectedType = type;
-    // });
+    // El estado ya se inicializa y carga los datos en su propio constructor.
+    // No se necesita lógica de carga aquí.
   }
 
+  /**
+   * ngOnInit: Se configura el debounce para el campo de búsqueda.
+   * Esto evita que se actualice el estado en cada pulsación de tecla, mejorando el rendimiento.
+   */
   ngOnInit(): void {
-    // No es necesario hacer nada adicional aquí
+    this.searchSubject.pipe(
+      debounceTime(300), // Espera 300ms después de la última pulsación antes de emitir
+      takeUntil(this.destroy$)
+    ).subscribe(term => {
+      this.state.searchTerm.set(term);
+    });
   }
 
-  // Métodos de UI
-  // onSearchInput(): void {
-  //   this.state.setSearchQuery(this.searchInput);
-  // }
+  // --- MANEJADORES DE EVENTOS DE LA UI ---
 
-  // onTypeChange(): void {
-  //   this.state.setSelectedType(this.selectedType);
-  // }
-
-  toggleExpand(accountId: string): void {
-    this.state.toggleExpand(accountId);
+  /**
+   * Se llama cuando el usuario cambia la selección de la versión.
+   * Delega la acción al servicio de estado.
+   * @param version El número de la nueva versión seleccionada.
+   */
+  onVersionChange(version: number): void {
+    this.state.selectVersion(Number(version));
   }
 
-  reloadAccounts(): void {
-    this.reloading = true;
-    this.state.loadAccounts();
-    
-    // Simular tiempo de espera para feedback visual
-    setTimeout(() => {
-      this.reloading = false;
-    }, 1000);
+  /**
+   * Se llama cuando el usuario cambia la selección de la jerarquía.
+   * Delega la acción al servicio de estado.
+   * @param hierarchy El nuevo tipo de jerarquía seleccionada.
+   */
+  onHierarchyChange(hierarchy: HierarchyType): void {
+    this.state.selectHierarchy(hierarchy);
   }
 
-  expandAll(): void {
-    this.state.expandAll();
+  /**
+   * Se llama en el evento (input) del campo de búsqueda.
+   * Emite el nuevo término de búsqueda al searchSubject para el debouncing.
+   * @param event El evento del input.
+   */
+  onSearchTermChange(event: Event): void {
+    const term = (event.target as HTMLInputElement).value;
+    this.searchSubject.next(term);
   }
 
-  collapseAll(): void {
-    this.state.collapseAll();
+  // --- NAVEGACIÓN ---
+
+  /**
+   * Navega al formulario de cuentas. Si se provee un ID, navega en modo edición.
+   * @param id El ID opcional de la cuenta a editar.
+   */
+  goToAccountForm(id?: string): void {
+    const route = id ? ['/accounting/account-form', id] : ['/accounting/account-form'];
+    this.router.navigate(route);
   }
 
-  navigateToEdit(accountId: string, event?: Event): void {
-    if (event) {
-      event.stopPropagation();
-    }
-    this.router.navigate(['/app/accounting/chart-of-accounts', accountId, 'edit']);
+  /**
+   * Navega a la página de operaciones masivas.
+   */
+  goToBulkOperations(): void {
+    this.router.navigate(['/accounting/bulk-operations']);
   }
 
-  navigateToCreate(): void {
-    this.router.navigate(['/app/accounting/chart-of-accounts/new']);
+  /**
+   * Navega a la herramienta de fusión de cuentas.
+   */
+  goToMergeTool(): void {
+    this.router.navigate(['/accounting/merge-tool']);
   }
 
-  // Obtener jerarquía visual para indicadores
-  getHierarchyLines(level: number): { vertical: boolean; horizontal: boolean }[] {
-    const lines: { vertical: boolean; horizontal: boolean }[] = [];
-    
-    // Solo para niveles mayores a 0
-    if (level > 0) {
-      // Añadir línea vertical para cada nivel
-      for (let i = 1; i < level; i++) {
-        lines.push({ vertical: true, horizontal: false });
-      }
-      
-      // Añadir línea horizontal para el último nivel
-      lines.push({ vertical: false, horizontal: true });
-    }
-    
-    return lines;
+  // --- ACCIONES COMPLEJAS ---
+
+  /**
+   * Inicia el flujo para crear una nueva versión del plan de cuentas.
+   * (Implementación futura: abriría un modal para confirmar y pedir fecha de efectividad).
+   */
+  createNewVersion(): void {
+    console.log('Lógica para crear nueva versión pendiente de implementación.');
+    // Ejemplo de cómo podría ser:
+    // const baseVersion = this.state.selectedVersion();
+    // this.modalService.open(CreateVersionModal, { data: { baseVersion } }).onClose.subscribe(result => {
+    //   if (result && result.effectiveDate) {
+    //     this.state.createVersion(baseVersion, result.effectiveDate);
+    //   }
+    // });
   }
 
-  // Manejar clic en fila
-  onRowClick(accountId: string, hasChildren: boolean, event?: Event): void {
-    if (event) {
-      event.stopPropagation();
-    }
-    
-    if (hasChildren) {
-      this.toggleExpand(accountId);
-    } else {
-      this.navigateToEdit(accountId);
-    }
-  }
-
+  /**
+   * ngOnDestroy: Limpia la suscripción al searchSubject para evitar fugas de memoria.
+   */
   ngOnDestroy(): void {
-    // No es necesario limpieza manual
-  }
-
-  // TrackBy para optimización de rendimiento
-  trackByAccountId(index: number, account: FlattenedAccount): string {
-    return account.id;
+    this.destroy$.next();
+    this.destroy$.complete();
   }
 }
