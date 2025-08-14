@@ -4,16 +4,17 @@ import { Component, OnInit, inject, signal } from '@angular/core';
 import { FormBuilder, FormGroup, Validators, AbstractControl, ValidationErrors, ReactiveFormsModule } from '@angular/forms';
 import { Router, RouterLink } from '@angular/router';
 import { CommonModule } from '@angular/common';
-import { ArrowLeft, ArrowRight, BarChart2, Check, CheckCircle, LucideAngularModule, Package, Rocket } from 'lucide-angular';
+import { AlertCircle, ArrowLeft, ArrowRight, BarChart2, Check, CheckCircle, LucideAngularModule, Package, Rocket } from 'lucide-angular';
 import { trigger, state, style, transition, animate } from '@angular/animations';
 import { AuthService } from '../../../core/services/auth';
 import { RegisterPayload } from '../../../shared/interfaces/register-payload.interface';
-import { StepAccount } from './steps/step-account/step-account';
-import { StepAccess } from './steps/step-access/step-access';
+import { StepAccountInfo } from './steps/step-account-info/step-account-info';
 import { StepBusiness } from './steps/step-business/step-business';
 import { StepConfiguration } from './steps/step-configuration/step-configuration';
 import { StepPlan } from './steps/step-plan/step-plan';
 import { strongPasswordValidator } from '../../../shared/validators/password.validator';
+import { RECAPTCHA_V3_SITE_KEY, RecaptchaV3Module, ReCaptchaV3Service } from 'ng-recaptcha-19';
+import { environment } from '../../../../environments/environment';
 
 export function passwordMatchValidator(control: AbstractControl): ValidationErrors | null {
   const password = control.get('password')?.value;
@@ -29,11 +30,16 @@ export function passwordMatchValidator(control: AbstractControl): ValidationErro
     ReactiveFormsModule,
     LucideAngularModule,
     RouterLink,
-    StepAccount,
-    StepAccess,
+    StepAccountInfo,
     StepBusiness,
     StepConfiguration,
     StepPlan,
+    RecaptchaV3Module
+  ],
+  
+  providers: [
+    ReCaptchaV3Service,
+    { provide: RECAPTCHA_V3_SITE_KEY, useValue: environment.recaptcha.siteKey }
   ],
   templateUrl: './register.page.html',
   styleUrls: ['./register.page.scss'],
@@ -58,27 +64,27 @@ export class RegisterPage implements OnInit {
   protected readonly ArrowLeftIcon = ArrowLeft;
   protected readonly ArrowRightIcon = ArrowRight;
   protected readonly RocketIcon = Rocket;
+    protected readonly AlertCircleIcon = AlertCircle; // Nuevo icono para errores
 
   private fb = inject(FormBuilder);
   private authService = inject(AuthService);
   private router = inject(Router);
+  private recaptchaV3Service = inject(ReCaptchaV3Service);
 
   currentStep = signal(1);
   registerForm!: FormGroup;
   errorMessage = signal<string | null>(null);
   isRegistering = signal(false);
-  stepsCompleted = signal<boolean[]>(new Array(5).fill(false));
+  stepsCompleted = signal<boolean[]>(new Array(4).fill(false));
 
   ngOnInit(): void {
     this.registerForm = this.fb.group({
-      account: this.fb.group({
+      accountInfo: this.fb.group({
         firstName: ['', [Validators.required]],
         lastName: ['', [Validators.required]],
         jobTitle: [''],
         phone: [''],
         avatarUrl: [null],
-      }),
-      access: this.fb.group({
         email: ['', [Validators.required, Validators.email]],
         passwordGroup: this.fb.group({
           password: ['', [
@@ -130,7 +136,7 @@ export class RegisterPage implements OnInit {
       return newCompleted;
     });
 
-    if (this.currentStep() < 5) {
+    if (this.currentStep() < 4) {
       this.currentStep.update(step => step + 1);
       this.errorMessage.set(null);
     }
@@ -142,8 +148,7 @@ export class RegisterPage implements OnInit {
     }
   }
 
-  get account() { return this.registerForm.get('account') as FormGroup; }
-  get access() { return this.registerForm.get('access') as FormGroup; }
+  get accountInfo() { return this.registerForm.get('accountInfo') as FormGroup; }
   get business() { return this.registerForm.get('business') as FormGroup; }
   get configuration() { return this.registerForm.get('configuration') as FormGroup; }
   get plan() { return this.registerForm.get('plan') as FormGroup; }
@@ -155,14 +160,13 @@ export class RegisterPage implements OnInit {
   }
 
   private getCurrentStepForm(): FormGroup | null {
-    const stepNames = ['account', 'access', 'business', 'configuration', 'plan'];
+    const stepNames = ['accountInfo', 'business', 'configuration', 'plan'];
     const currentStepName = stepNames[this.currentStep() - 1];
     return this.registerForm.get(currentStepName) as FormGroup;
   }
 
-  // --- NUEVO: Encontrar primer paso inválido ---
   private findFirstInvalidStep(): number {
-    const stepNames = ['account', 'access', 'business', 'configuration', 'plan'];
+    const stepNames = ['accountInfo', 'business', 'configuration', 'plan'];
     for (let i = 0; i < stepNames.length; i++) {
       const stepGroup = this.registerForm.get(stepNames[i]) as FormGroup;
       if (stepGroup.invalid) {
@@ -176,43 +180,50 @@ export class RegisterPage implements OnInit {
     this.markAllAsTouched();
 
     if (this.registerForm.invalid) {
-      // Navegar al primer paso inválido
-      const firstInvalidStep = this.findFirstInvalidStep();
-      this.currentStep.set(firstInvalidStep);
-      this.errorMessage.set('Por favor, completa todos los campos requeridos correctamente.');
-      return;
+        const firstInvalidStep = this.findFirstInvalidStep();
+        this.currentStep.set(firstInvalidStep);
+        this.errorMessage.set('Por favor, completa todos los campos requeridos correctamente.');
+        return;
     }
 
     this.isRegistering.set(true);
     this.errorMessage.set(null);
 
-    const formValue = this.registerForm.getRawValue();
+    this.recaptchaV3Service.execute('register').subscribe({
+        next: (recaptchaToken) => {
+            const formValue = this.registerForm.getRawValue();
+            const payload: RegisterPayload = {
+                firstName: formValue.accountInfo.firstName,
+                lastName: formValue.accountInfo.lastName,
+                email: formValue.accountInfo.email,
+                password: formValue.accountInfo.passwordGroup.password,
+                organizationName: formValue.business.companyName,
+                rnc: formValue.configuration.taxId,
+                recaptchaToken
+            };
 
-    const payload: RegisterPayload = {
-      firstName: formValue.account.firstName,
-      lastName: formValue.account.lastName,
-      email: formValue.access.email,
-      password: formValue.access.passwordGroup.password,
-      organizationName: formValue.business.companyName,
-      rnc: formValue.configuration.taxId,
-    };
-
-    this.authService.register(payload).subscribe({
-      next: () => {
-        this.isRegistering.set(false);
-        alert('¡Registro exitoso! Ahora puedes iniciar sesión.');
-        this.router.navigate(['/auth/login']);
-      },
-      error: (err) => {
-        if (err.status === 409) {
-          this.errorMessage.set('El correo electrónico ya está registrado. Por favor usa otro correo.');
-        } else if (err.status === 400 && err.error?.details) {
-          this.handleFieldErrors(err.error.details);
-        } else {
-          this.errorMessage.set(err.customMessage || 'Ocurrió un error inesperado durante el registro.');
+            this.authService.register(payload).subscribe({
+                next: () => {
+                    this.isRegistering.set(false);
+                    alert('¡Registro exitoso! Ahora puedes iniciar sesión.');
+                    this.router.navigate(['/auth/login']);
+                },
+                error: (err) => {
+                    if (err.status === 409) {
+                        this.errorMessage.set('El correo electrónico ya está registrado. Por favor usa otro correo.');
+                    } else if (err.status === 400 && err.error?.details) {
+                        this.handleFieldErrors(err.error.details);
+                    } else {
+                        this.errorMessage.set(err.customMessage || 'Ocurrió un error inesperado durante el registro.');
+                    }
+                    this.isRegistering.set(false);
+                }
+            });
+        },
+        error: (err) => {
+            this.errorMessage.set('Error al validar reCAPTCHA.');
+            this.isRegistering.set(false);
         }
-        this.isRegistering.set(false);
-      }
     });
   }
 
@@ -229,7 +240,7 @@ export class RegisterPage implements OnInit {
   }
 
   private handleFieldErrors(details: any[]) {
-    let firstErrorStep = 5;
+    let firstErrorStep = 4;
 
     details.forEach((err: any) => {
       const field = err.field;
@@ -242,7 +253,7 @@ export class RegisterPage implements OnInit {
       }
     });
 
-    if (firstErrorStep < 5) {
+    if (firstErrorStep < 4) {
       this.currentStep.set(firstErrorStep);
       this.errorMessage.set('Por favor, corrige los errores en los campos resaltados.');
     } else {
@@ -265,10 +276,9 @@ export class RegisterPage implements OnInit {
   }
 
   private getStepForField(field: string): number {
-    if (field.startsWith('account')) return 1;
-    if (field.startsWith('access')) return 2;
-    if (field.startsWith('business')) return 3;
-    if (field.startsWith('configuration')) return 4;
-    return 5;
+    if (field.startsWith('accountInfo')) return 1;
+    if (field.startsWith('business')) return 2;
+    if (field.startsWith('configuration')) return 3;
+    return 4;
   }
 }

@@ -21,7 +21,7 @@
         <p>¿Ya tienes una cuenta? <a routerLink="/auth/login" class="link">Inicia sesión</a></p>
       </div>
       <div class="stepper-header">
-        @for (step of [1,2,3,4,5]; track $index) {
+        @for (step of [1,2,3,4]; track $index) {
         <div class="step" [class.active]="currentStep() >= $index + 1" [class.completed]="stepsCompleted()[$index]"
           (click)="navigateToStep($index + 1)">
           <div class="step-icon">
@@ -30,26 +30,24 @@
           </div>
           <span class="step-label">
             @switch ($index + 1) {
-            @case (1) { Cuenta }
-            @case (2) { Acceso }
-            @case (3) { Empresa }
-            @case (4) { Configuración }
-            @case (5) { Plan }
+            @case (1) { Cuenta y Acceso }
+            @case (2) { Empresa }
+            @case (3) { Configuración }
+            @case (4) { Plan }
             }
           </span>
         </div>
-        @if ($index < 4) { <div class="step-connector" [class.completed]="stepsCompleted()[$index]">
+        @if ($index < 3) { <div class="step-connector" [class.completed]="stepsCompleted()[$index]">
       </div>
       }
       }
     </div>
     <div class="stepper-content" [@stepAnimation]="currentStep()">
       @switch (currentStep()) {
-      @case (1) { <app-step-account [parentForm]="account" /> }
-      @case (2) { <app-step-access [parentForm]="access" /> }
-      @case (3) { <app-step-business [parentForm]="business" /> }
-      @case (4) { <app-step-configuration [parentForm]="configuration" /> }
-      @case (5) { <app-step-plan [parentForm]="plan" /> }
+      @case (1) { <app-step-account-info [parentForm]="accountInfo" /> }
+      @case (2) { <app-step-business [parentForm]="business" /> }
+      @case (3) { <app-step-configuration [parentForm]="configuration" /> }
+      @case (4) { <app-step-plan [parentForm]="plan" /> }
       }
     </div>
     @if (errorMessage()) {
@@ -61,7 +59,7 @@
         <lucide-icon [img]="ArrowLeftIcon" size="16" /><span>Anterior</span>
       </button>
       }
-      @if (currentStep() < 5) { <button type="button" class="primary-button" (click)="nextStep()">
+      @if (currentStep() < 4) { <button type="button" class="primary-button" (click)="nextStep()">
         <span>Siguiente</span><lucide-icon [img]="ArrowRightIcon" size="16" />
         </button>
         } @else {

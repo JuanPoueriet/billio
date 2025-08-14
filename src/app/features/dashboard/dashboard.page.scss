@@ -191,7 +191,7 @@ gridster-item {
     }
 
     .close-panel-btn {
-        @include mixins.icon-button;
+        // @include mixins.icon-button;
         position: absolute;
         top: 1rem;
         right: 1rem;

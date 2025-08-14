@@ -5,4 +5,7 @@ export interface RegisterPayload {
     password: string;
     organizationName: string;
     rnc?: string;
+    recaptchaToken?: string;
+    plan?: string;
+    
 }

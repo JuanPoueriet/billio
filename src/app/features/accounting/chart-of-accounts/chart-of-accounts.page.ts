@@ -31,7 +31,6 @@ import { debounceTime, takeUntil } from 'rxjs/operators';
   imports: [
     CommonModule,
     FormsModule,  // Necesario para [(ngModel)]
-    RouterLink    // Necesario para [routerLink]
   ],
   templateUrl: './chart-of-accounts.page.html',
   styleUrls: ['./chart-of-accounts.page.scss'],

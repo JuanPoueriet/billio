@@ -1,32 +1,42 @@
 <div class="auth-container">
     <div class="auth-card">
         <div class="auth-header">
-            <h1 class="auth-title">Iniciar Sesión</h1> <!-- Changed to h1 for better accessibility -->
-            <p class="auth-subtitle">Bienvenido de nuevo a tu espacio de trabajo.</p>
+            <div class="logo-container">
+                <!-- <svg class="logo" viewBox="0 0 48 48" aria-hidden="true">
+                    <path fill="var(--primary)"
+                        d="M24,4L6,16v16l18,12l18-12V16L24,4z M24,30c-3.3,0-6-2.7-6-6s2.7-6,6-6s6,2.7,6,6S27.3,30,24,30z" />
+                </svg> -->
+            </div>
+            <h1 class="auth-title">Iniciar Sesión</h1>
+            <p class="auth-subtitle">Bienvenido de nuevo a tu espacio de trabajo</p>
         </div>
+
         <form [formGroup]="loginForm" (ngSubmit)="onSubmit()" class="auth-form" novalidate #formElement>
             <div class="form-field" [class.error]="email?.invalid && (email?.touched || email?.dirty)">
-                <label for="email" class="sr-only">Correo Electrónico</label>
+                <label for="email" class="input-label">Correo Electrónico</label>
                 <div class="input-wrapper">
                     <lucide-icon [img]="MailIcon" size="18" class="input-icon" aria-hidden="true"></lucide-icon>
-                    <input id="email" type="email" formControlName="email" placeholder="tu@empresa.com"
+                    <input id="email" type="email" formControlName="email"
                         [class.is-invalid]="email?.invalid && email?.touched" [attr.aria-invalid]="email?.invalid"
                         [attr.aria-describedby]="email?.invalid ? 'email-error' : null">
                 </div>
                 @if (email?.invalid && (email?.touched || email?.dirty)) {
                 <div class="error-message" id="email-error">
-                    @if (email?.errors?.['required']) { <span>El correo es obligatorio.</span> }
-                    @if (email?.errors?.['email']) { <span>Por favor, introduce un correo válido.</span> }
+                    @if (email?.errors?.['required']) { <span>El correo es obligatorio</span> }
+                    @if (email?.errors?.['email']) { <span>Introduce un correo válido</span> }
                 </div>
                 }
             </div>
 
             <div class="form-field" [class.error]="password?.invalid && (password?.touched || password?.dirty)">
-                <label for="password" class="sr-only">Contraseña</label>
+                <div class="password-header">
+                    <label for="password" class="input-label">Contraseña</label>
+                    <a routerLink="/auth/forgot-password" class="forgot-password">¿Olvidaste tu contraseña?</a>
+                </div>
                 <div class="input-wrapper">
                     <lucide-icon [img]="LockIcon" size="18" class="input-icon" aria-hidden="true"></lucide-icon>
                     <input id="password" [type]="passwordVisible() ? 'text' : 'password'" formControlName="password"
-                        placeholder="••••••••" [class.is-invalid]="password?.invalid && password?.touched"
+                        [class.is-invalid]="password?.invalid && password?.touched"
                         [attr.aria-invalid]="password?.invalid"
                         [attr.aria-describedby]="password?.invalid ? 'password-error' : null">
                     <button type="button" (click)="togglePasswordVisibility()" class="toggle-password"
@@ -40,29 +50,34 @@
                 </div>
                 @if (password?.invalid && (password?.touched || password?.dirty)) {
                 <div class="error-message" id="password-error">
-                    @if (password?.errors?.['required']) { <span>La contraseña es obligatoria.</span> }
+                    @if (password?.errors?.['required']) { <span>La contraseña es obligatoria</span> }
                 </div>
                 }
             </div>
 
+            <div class="remember-container">
+                <input type="checkbox" class="remember-checkbox" formControlName="rememberMe" id="remember-me">
+                <label for="remember" class="remember-label">Mantener la sesión iniciada</label>
+            </div>
+
             @if (errorMessage()) {
             <div class="error-message global-error" role="alert" id="global-error">
-                {{ errorMessage() }}
+                <lucide-icon [img]="AlertCircleIcon" size="16" aria-hidden="true"></lucide-icon>
+                <span>{{ errorMessage() }}</span>
             </div>
             }
 
-            <button type="submit" [disabled]="isLoggingIn()" class="submit-button" [attr.aria-busy]="isLoggingIn()"
-                [attr.aria-describedby]="errorMessage() ? 'global-error' : null">
+            <button type="submit" [disabled]="isLoggingIn()" class="submit-button" [class.loading]="isLoggingIn()"
+                [attr.aria-busy]="isLoggingIn()" [attr.aria-describedby]="errorMessage() ? 'global-error' : null">
                 @if (isLoggingIn()) {
                 <span class="spinner" aria-hidden="true"></span>
-                <span>Procesando...</span>
-                } @else {
-                <span>Entrar</span>
                 }
+                <span>Entrar</span>
             </button>
 
             <div class="auth-footer">
-                <a routerLink="/auth/register" class="footer-link">Crear una cuenta nueva</a>
+                <p class="register-text">¿No tienes una cuenta? <a routerLink="/auth/register"
+                        class="register-link">Regístrate</a></p>
             </div>
         </form>
     </div>

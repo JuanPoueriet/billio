@@ -4,6 +4,7 @@ export const environment = {
   
   // Nueva configuración para reCAPTCHA
   recaptcha: {
-    siteKey: '6LeIxAcTAAAAAJcZVRqyHh71UMIEGNQ_MXjiZKhI' // Clave de prueba para desarrollo
+    siteKey: '6LeG8p4rAAAAAGpAeRZ-MAFR_mHthbHb5ydkTEuR' // <-- Pega la clave aquí
+
   }
 };
