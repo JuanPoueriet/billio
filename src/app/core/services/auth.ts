@@ -1,12 +1,20 @@
 import { Injectable, inject, signal, computed } from '@angular/core';
 import { HttpClient, HttpErrorResponse } from '@angular/common/http';
 import { Router } from '@angular/router';
-import { Observable, catchError, map, tap, throwError, of } from 'rxjs';
+import { Observable, catchError, map, tap, throwError, of, BehaviorSubject } from 'rxjs';
 
 import { RegisterPayload } from '../../shared/interfaces/register-payload.interface';
 import { User } from '../../shared/interfaces/user.interface';
 import { LoginCredentials } from '../../shared/interfaces/login-credentials.interface';
 import { AuthStatus } from '../../shared/enums/auth-status.enum';
+
+interface LoginResponse {
+  user: User;
+  access_token: string;
+}
+
+
+
 
 @Injectable({
   providedIn: 'root'
@@ -38,29 +46,48 @@ export class AuthService {
    * El constructor se ejecuta cuando se instancia el servicio.
    * Llama a checkAuthStatus para verificar si ya existe una sesión válida en el backend.
    */
+
+
+
+  private _isAuthenticated = new BehaviorSubject<boolean>(false);
+  public isAuthenticated$ = this._isAuthenticated.asObservable();
+
+  private _user = new BehaviorSubject<User | null>(null);
+  public user$ = this._user.asObservable();
+
+
+
+
   constructor() {
     // this.checkAuthStatus().subscribe();
   }
 
-  private baseUrl = 'http://localhost:3000/api';
+
+
+
+
+
 
   /**
    * Refresca el token de acceso utilizando el token de refresco (almacenado en una cookie segura).
    * @returns Un observable que, al completarse, actualiza el estado de autenticación.
    */
-  refreshAccessToken(): Observable<void> {
-    const url = `${this.apiUrl}/refresh`;
-    return this.http.post<void>(url, {}, { withCredentials: true }).pipe(
-      tap(() => {
-        // Actualiza el estado de autenticación a autenticado.
-        this._authStatus.set(AuthStatus.authenticated);
-      }),
-      catchError(error => {
-        // Si hay un error, marcamos como no autenticado y propagamos el error.
-        this._authStatus.set(AuthStatus.unauthenticated);
-        return throwError(() => error);
+  refreshAccessToken(): Observable<LoginResponse> {
+    // --- CORRECCIÓN ---
+    // Cambiado de post a get y eliminado el cuerpo vacío `{}`
+    return this.http.get<LoginResponse>(`${this.apiUrl}/refresh`, 
+      { withCredentials: true }
+    ).pipe(
+    ).pipe(
+      tap((response) => {
+        if (response && response.user && response.access_token) {
+          this._isAuthenticated.next(true);
+          this._user.next(response.user);
+          console.log('[AuthService] Token refrescado exitosamente');
+        }
       })
     );
+    // --- FIN DE LA CORRECCIÓN ---
   }
 
   /**
@@ -70,12 +97,14 @@ export class AuthService {
    */
   login(credentials: LoginCredentials): Observable<User> {
     const url = `${this.apiUrl}/login`;
-    return this.http.post<{ user: User }>(url, credentials, { withCredentials: true }).pipe(
-      map(response => response.user), // Extrae el objeto de usuario de la respuesta.
-      tap(user => {
-        this._currentUser.set(user);
+    return this.http.post<{ user: User }>(url, credentials, {
+      withCredentials: true
+    }).pipe(
+      tap(response => {
+        this._currentUser.set(response.user);
         this._authStatus.set(AuthStatus.authenticated);
       }),
+      map(response => response.user),
       catchError(err => this.handleError('login', err))
     );
   }

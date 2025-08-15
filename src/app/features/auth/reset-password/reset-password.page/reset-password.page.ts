@@ -19,7 +19,7 @@ const strongPasswordValidator = (): ValidatorFn => {
 
 const passwordMatchValidator: ValidatorFn = (group: AbstractControl): ValidationErrors | null => {
   const password = group.get('password')?.value;
-  const confirm  = group.get('confirmPassword')?.value;
+  const confirm = group.get('confirmPassword')?.value;
   return password && confirm && password !== confirm ? { passwordMismatch: true } : null;
 };
 
@@ -63,8 +63,8 @@ export class ResetPasswordPage implements OnInit {
   ngOnInit(): void {
     // this.token = this.route.snapshot.paramMap.get('token');
     this.token = this.route.snapshot.queryParamMap.get('token');
-    if (!this.token) {
-      this.errorMessage = "Token de restablecimiento no válido o ausente.";
+    if (!this.token || this.token.length < 30) {
+      this.errorMessage = "Token de restablecimiento inválido";
     }
 
     // ✅ Crear el form con el grupo 'passwordGroup'

@@ -90,8 +90,8 @@ export class LoginPage implements OnInit {
         const credentials: any = {
           email: formValue.email,
           password: formValue.password,
-          rememberMe: formValue.rememberMe,
           recaptchaToken: token,
+          rememberMe: formValue.rememberMe,
         };
 
         this.authService.login(credentials).subscribe({

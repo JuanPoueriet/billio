@@ -1,6 +1,6 @@
 import { ApplicationConfig, provideBrowserGlobalErrorListeners, provideZonelessChangeDetection } from '@angular/core';
 import { provideRouter, withInMemoryScrolling } from '@angular/router';
-import { provideHttpClient, withInterceptors } from '@angular/common/http';
+import { provideHttpClient, withFetch, withInterceptors } from '@angular/common/http';
 import { provideAnimations } from '@angular/platform-browser/animations';
 import { provideHighcharts } from 'highcharts-angular';
 import { provideTranslateService } from '@ngx-translate/core';
@@ -78,7 +78,6 @@ export const appConfig: ApplicationConfig = {
     ...CHARTS_PROVIDERS,
     ...I18N_PROVIDERS,
     ...RECAPTCHA_PROVIDERS,
-
-    provideHttpClient(withInterceptors([authInterceptor]))
+    provideHttpClient(withInterceptors([authInterceptor]), withFetch()),
   ],
 };

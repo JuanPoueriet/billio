@@ -26,7 +26,8 @@ export class ThemeService implements OnDestroy {
     this.systemTheme = signal(this.getInitialSystemTheme());
     this.themeMode = signal(this.getInitialThemeMode());
 
-    effect(() => this.updateThemeOnDom(this.activeTheme()), { allowSignalWrites: true });
+    // effect(() => this.updateThemeOnDom(this.activeTheme()), { allowSignalWrites: true });
+    effect(() => this.updateThemeOnDom(this.activeTheme()), );
 
     if (isPlatformBrowser(this.platformId)) {
       this.colorSchemeQuery = window.matchMedia('(prefers-color-scheme: dark)');
