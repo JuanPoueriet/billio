@@ -30,6 +30,11 @@ export const AUTH_ROUTES: Routes = [
         loadComponent: () => import('./reset-password/reset-password.page/reset-password.page').then(m => m.ResetPasswordPage)
     },
     {
+        path: 'set-password/:token',
+        title: 'Configurar Contraseña',
+        loadComponent: () => import('./set-password/set-password.page').then(m => m.SetPasswordPage),
+    },
+    {
         path: '',
         redirectTo: 'login',
         pathMatch: 'full'

@@ -21,39 +21,39 @@ export const authInterceptor: HttpInterceptorFn = (
         withCredentials: true
     });
 
-    if (authReq.url.includes('/auth/refresh')) {
-        console.log('[Interceptor] Enviando solicitud de refresh');
-        console.log('[Interceptor] URL:', authReq.url);
-    }
-
     return next(authReq).pipe(
         catchError((error: HttpErrorResponse) => {
-            // --- CORRECCIÓN ---
-            // Condiciones para intentar refrescar el token:
-            // 1. El error es 401 (Unauthorized).
-            // 2. La URL original NO era para el endpoint de refresh.
-            // 3. La URL original NO era para el endpoint de login.
             const isUnauthorized = error.status === 401;
-            const isNotRefreshRequest = !authReq.url.includes('/auth/refresh');
-            const isNotLoginRequest = !authReq.url.includes('/auth/login');
+            
+            // Lista de rutas de autenticación públicas que no deben disparar el refresco de token
+            const publicAuthApiPaths = [
+                '/auth/login',
+                '/auth/register',
+                '/auth/refresh',
+                '/auth/status',
+                '/auth/forgot-password',
+                '/auth/reset-password'
+            ];
+            
+            const isPublicAuthApiRoute = publicAuthApiPaths.some(path => authReq.url.includes(path));
 
-            if (isUnauthorized && isNotRefreshRequest && isNotLoginRequest) {
-            // --- FIN DE LA CORRECCIÓN ---
-                console.log('[Interceptor] Intentando refrescar token...');
+            if (isUnauthorized && !isPublicAuthApiRoute) {
+                console.log('[Interceptor] Token expirado detectado. Intentando refrescar...');
                 return authService.refreshAccessToken().pipe(
                     switchMap(() => {
-                        console.log('[Interceptor] Token refrescado, reintentando solicitud original');
-                        // Reintenta la solicitud original. No es necesario clonarla de nuevo.
+                        console.log('[Interceptor] Token refrescado. Reintentando la solicitud original.');
+                        // Reintenta la solicitud original con las credenciales actualizadas
                         return next(authReq);
                     }),
                     catchError((refreshError) => {
-                        console.error('[Interceptor] Error al refrescar token:', refreshError);
-                        authService.logout(); // Si el refresh falla, desloguear.
+                        console.error('[Interceptor] Fallo al refrescar el token. Deslogueando usuario.', refreshError);
+                        authService.logout(); // Si el refresco falla, se desloguea al usuario
                         return throwError(() => refreshError);
                     })
                 );
             }
-            // Para todos los demás errores, simplemente propaga el error.
+            
+            // Para todos los demás errores, o para errores 401 en rutas públicas, se propaga el error.
             return throwError(() => error);
         })
     );

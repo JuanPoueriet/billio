@@ -64,7 +64,23 @@ export class AuthService {
 
 
 
-
+  /**
+   * ✅ NUEVO Y CORREGIDO: Verifica si el usuario actual tiene un conjunto de permisos.
+   * @param requiredPermissions Los permisos requeridos para realizar una acción.
+   * @returns `true` si el usuario tiene todos los permisos, `false` de lo contrario.
+   */
+  hasPermissions(requiredPermissions: string[]): boolean {
+    const user = this.currentUser();
+    if (!user || !user.permissions) {
+      return false;
+    }
+    // Si el usuario tiene el permiso '*', tiene acceso a todo.
+    if (user.permissions.includes('*')) {
+      return true;
+    }
+    // Verifica que cada permiso requerido esté presente en los permisos del usuario.
+    return requiredPermissions.every(p => user.permissions.includes(p));
+  }
 
 
 

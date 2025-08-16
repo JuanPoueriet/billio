@@ -1,37 +1,36 @@
 /**
- * Define la estructura de datos para un objeto de Usuario en la aplicación.
- * Esta interfaz debe coincidir con la entidad User del backend.
+ * Representa la estructura de un usuario en la aplicación.
+ * Esta interfaz debe mantenerse alineada con la entidad `User` del backend.
  */
 export interface User {
-  /**
-   * Identificador único del usuario (UUID).
-   */
+  /** Identificador único del usuario (UUID). */
   id: string;
 
-  /**
-   * Correo electrónico del usuario.
-   */
+  /** Correo electrónico del usuario. */
   email: string;
 
-  /**
-   * Nombre del usuario.
-   */
-  firstName: string; // ✅ CORRECCIÓN: Se usa firstName
+  /** Nombre del usuario. */
+  firstName: string;
 
-  /**
-   * Apellido del usuario.
-   */
-  lastName: string; // ✅ CORRECCIÓN: Se usa lastName
+  /** Apellido del usuario. */
+  lastName: string;
 
-  /**
-   * Indica si la cuenta del usuario está activa.
-   */
+  /** Indica si la cuenta del usuario está activa. */
   isActive: boolean;
 
   /**
    * Lista de roles asignados al usuario.
+   * Ejemplo: ["admin", "editor"]
    */
-  roles: string[]; // En el backend se llama 'role', pero lo ajustamos en el payload del token.
+  roles: string[];
 
-  token: string; //
+  /**
+   * Lista de permisos calculados del usuario.
+   * El backend los añade al payload del JWT a partir de los roles.
+   * Ejemplo: ["users.create", "users.delete"]
+   */
+  permissions: string[];
+
+  /** Token de acceso JWT del usuario. */
+  token: string;
 }
