@@ -1,16 +1,19 @@
+// src/app/features/settings/user-management/user-management.page.ts
 import { Component, OnInit, inject, signal } from '@angular/core';
 import { FormBuilder, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
-import { CommonModule } from '@angular/common';
+import { CommonModule, TitleCasePipe } from '@angular/common';
 import { LucideAngularModule, UserPlus, Save, X, MoreVertical, Power, PowerOff, Send } from 'lucide-angular';
+import { forkJoin } from 'rxjs';
 import { NotificationService } from '../../../core/services/notification';
-import { HasPermissionDirective } from '../../../shared/directives/has-permission.directive';
-import { InviteUserDto, User, UsersService } from '../../../core/api/users.service';
+import { InviteUserDto, UsersService } from '../../../core/api/users.service';
 import { Role, RolesService } from '../../../core/api/roles.service';
+import { AuthService } from '../../../core/services/auth';
+import { User } from '../../../shared/interfaces/user.interface';
 
 @Component({
   selector: 'app-user-management-page',
   standalone: true,
-  imports: [CommonModule, ReactiveFormsModule, LucideAngularModule, HasPermissionDirective],
+  imports: [CommonModule, ReactiveFormsModule, LucideAngularModule, TitleCasePipe],
   templateUrl: './user-management.page.html',
   styleUrls: ['./user-management.page.scss']
 })
@@ -20,6 +23,7 @@ export class UserManagementPage implements OnInit {
   private usersService = inject(UsersService);
   private rolesService = inject(RolesService);
   private notificationService = inject(NotificationService);
+  private authService = inject(AuthService);
 
   // Iconos
   protected readonly UserPlusIcon = UserPlus;
@@ -35,6 +39,7 @@ export class UserManagementPage implements OnInit {
   inviteForm!: FormGroup;
   users = signal<User[]>([]);
   roles = signal<Role[]>([]);
+  loading = signal(true);
 
   ngOnInit(): void {
     this.inviteForm = this.fb.group({
@@ -43,21 +48,29 @@ export class UserManagementPage implements OnInit {
       email: ['', [Validators.required, Validators.email]],
       roleId: ['', Validators.required]
     });
-    this.loadUsers();
-    this.loadRoles();
-  }
-  
-  loadUsers(): void {
-    this.usersService.getUsers().subscribe({
-      next: (data) => this.users.set(data),
-      error: () => this.notificationService.showError('No se pudieron cargar los usuarios.')
-    });
+    this.loadData();
   }
 
-  loadRoles(): void {
-    this.rolesService.getRoles().subscribe({
-      next: (data) => this.roles.set(data.filter(r => !r.isSystemRole)), // No mostrar roles de sistema para asignar
-      error: () => this.notificationService.showError('No se pudieron cargar los roles.')
+  loadData(): void {
+    this.loading.set(true);
+    forkJoin({
+      users: this.usersService.getAllUsers(),
+      roles: this.rolesService.getRoles()
+    }).subscribe({
+      next: ({ users, roles }) => {
+        this.users.set(users);
+        // this.roles.set(roles.filter((role: Role) => !role.isSystemRole));
+
+        console.log('Roles recibidos del backend:', roles);
+
+        this.roles.set(roles);
+
+        this.loading.set(false);
+      },
+      error: () => {
+        this.loading.set(false);
+        this.notificationService.show('Error al cargar los datos', 'error');
+      }
     });
   }
 
@@ -72,51 +85,29 @@ export class UserManagementPage implements OnInit {
 
   sendInvitation(): void {
     if (this.inviteForm.invalid) return;
-    
+
     const inviteDto: InviteUserDto = this.inviteForm.value;
     this.usersService.inviteUser(inviteDto).subscribe({
       next: () => {
-        this.notificationService.showSuccess('Invitación enviada exitosamente.');
-        this.loadUsers();
+        this.notificationService.show('Invitación enviada exitosamente.', 'success');
+        this.loadData();
         this.closeModal();
       },
-      error: (err) => this.notificationService.showError(err.error.message || 'Error al enviar la invitación.')
+      error: (err) => this.notificationService.show(err.error?.message || 'Error al enviar invitación', 'error')
     });
   }
-  
-  toggleUserStatus(user: User): void {
-      const newStatus = !user.isActive;
-      const action = newStatus ? 'activar' : 'desactivar';
 
-      if (confirm(`¿Estás seguro de que quieres ${action} a ${user.firstName}?`)) {
-          this.usersService.setUserStatus(user.id, newStatus).subscribe({
-              next: () => {
-                  this.notificationService.showSuccess(`Usuario ${action}do.`);
-                  this.loadUsers();
-              },
-              error: (err) => this.notificationService.showError(err.error.message || 'No se pudo cambiar el estado.')
-          });
-      }
+  toggleUserStatus(user: User) {
+    const newStatus = user.status === 'active' ? 'inactive' : 'active';
+    this.usersService.updateUser(user.id, { status: newStatus }).subscribe(() => {
+      this.notificationService.show('Estado del usuario actualizado', 'success');
+      this.loadData();
+    });
   }
 
-  sendPasswordReset(user: User): void {
-      if (confirm(`¿Enviar un correo de restablecimiento de contraseña a ${user.firstName}?`)) {
-          this.usersService.sendPasswordReset(user.id).subscribe({
-              next: () => this.notificationService.showSuccess('Correo de restablecimiento enviado.'),
-              error: (err) => this.notificationService.showError(err.error.message || 'No se pudo enviar el correo.')
-          });
-      }
-  }
-
-   getRoleNames(user: User): string {
-    if (!user.roles || user.roles.length === 0) {
-      return 'Sin rol';
-    }
-    return user.roles.map(r => r.name).join(', ');
-  }
-
-  getUserStatus(user: User): 'Activo' | 'Inactivo' | 'Pendiente' {
-    if (!user.passwordHash) return 'Pendiente';
-    return user.isActive ? 'Activo' : 'Inactivo';
+  sendPasswordReset(user: User) {
+    this.authService.adminSendPasswordReset(user.email).subscribe(() => {
+      this.notificationService.show(`Correo de recuperación enviado a ${user.email}`, 'success');
+    });
   }
 }

@@ -56,7 +56,8 @@ export class RolesManagementPage implements OnInit {
     this.rolesService.getRoles().subscribe({
       next: (roles: Role[]) => this.roles.set(roles),
       error: () =>
-        this.notificationService.showError('No se pudieron cargar los roles.'),
+        this.notificationService.show('No se pudieron cargar los roles.', 'error'),
+
     });
   }
 
@@ -81,9 +82,10 @@ export class RolesManagementPage implements OnInit {
         this.permissionGroups.set(Object.values(groups));
       },
       error: () =>
-        this.notificationService.showError(
-          'No se pudieron cargar los permisos.',
-        ),
+        // this.notificationService.showError(
+        //   'No se pudieron cargar los permisos.',
+        // ),
+        console.error('No se pudieron cargar los permisos.'),
     });
   }
 
@@ -110,15 +112,19 @@ export class RolesManagementPage implements OnInit {
   cloneRole(role: Role): void {
     this.rolesService.cloneRole(role).subscribe({
       next: () => {
-        this.notificationService.showSuccess(
-          `Rol "${role.name}" clonado exitosamente.`,
-        );
+        // this.notificationService.showSuccess(
+        //   `Rol "${role.name}" clonado exitosamente.`,
+        // );
         this.loadRoles();
       },
       error: (err: unknown) =>
-        this.notificationService.showError(
-          (err as any)?.error?.message || 'Error al clonar el rol.',
-        ),
+        // this.notificationService.showError(
+        //   (err as any)?.error?.message || 'Error al clonar el rol.',
+        // ),
+
+        console.error((err as any)?.error?.message || 'Error al clonar el rol.'),
+
+        
     });
   }
 
@@ -162,16 +168,14 @@ export class RolesManagementPage implements OnInit {
 
     request.subscribe({
       next: () => {
-        this.notificationService.showSuccess(
-          `Rol ${editing ? 'actualizado' : 'creado'} exitosamente.`,
-        );
+        this.notificationService.show(`Rol guardado correctamente.`, 'success');
+
         this.loadRoles();
         this.closeModal();
       },
-      error: (err: unknown) =>
-        this.notificationService.showError(
-          (err as any)?.error?.message || 'Error al guardar el rol.',
-        ),
+      error: (err) =>
+        this.notificationService.show(err.error?.message, 'error')
+
     });
   }
 
@@ -181,13 +185,13 @@ export class RolesManagementPage implements OnInit {
 
     this.rolesService.deleteRole(role.id).subscribe({
       next: () => {
-        this.notificationService.showSuccess('Rol eliminado exitosamente.');
+        this.notificationService.show('Rol eliminado exitosamente.', 'success');
+
         this.loadRoles();
       },
-      error: (err: unknown) =>
-        this.notificationService.showError(
-          (err as any)?.error?.message || 'Error al eliminar el rol.',
-        ),
+      error: (err) =>
+        this.notificationService.show(err.error?.message, 'error')
+
     });
   }
 }

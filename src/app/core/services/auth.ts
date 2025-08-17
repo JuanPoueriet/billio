@@ -91,7 +91,7 @@ export class AuthService {
   refreshAccessToken(): Observable<LoginResponse> {
     // --- CORRECCIÓN ---
     // Cambiado de post a get y eliminado el cuerpo vacío `{}`
-    return this.http.get<LoginResponse>(`${this.apiUrl}/refresh`, 
+    return this.http.get<LoginResponse>(`${this.apiUrl}/refresh`,
       { withCredentials: true }
     ).pipe(
     ).pipe(
@@ -191,6 +191,13 @@ export class AuthService {
     return this.http.post<{ message: string }>(url, { email, recaptchaToken }).pipe(
       catchError(err => this.handleError('forgotPassword', err))
     );
+  }
+
+
+  adminSendPasswordReset(email: string): Observable<{ message: string }> {
+    const url = `${this.apiUrl}/auth/admin/send-password-reset`;
+    // El token de login del admin se envía automáticamente.
+    return this.http.post<{ message: string }>(url, { email });
   }
 
   /**

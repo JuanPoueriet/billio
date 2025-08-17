@@ -1,86 +1,102 @@
-<div class="settings-page-container">
-    <div class="page-header">
-        <h2>Usuarios y Permisos</h2>
-        <button class="primary-button" (click)="openModal()" *hasPermission="'users:create'">
-            <lucide-icon [img]="UserPlusIcon" size="16"></lucide-icon>
-            <span>Invitar Usuario</span>
-        </button>
-    </div>
+<div class="page-container">
+  <header class="page-header">
+    <h1>Gestión de Usuarios</h1>
+    <button class="button-primary" (click)="openModal()">
+      Invitar Usuario
+    </button>
+  </header>
 
-    <div class="table-container card">
-        <table class="data-table">
-            <thead>
-                <tr>
-                    <th>Nombre</th>
-                    <th>Email</th>
-                    <th>Roles</th>
-                    <th class="text-center">Estado</th>
-                    <th class="actions-column">Acciones</th>
-                </tr>
-            </thead>
-            <tbody>
-                @for(user of users(); track user.id) {
-                <tr>
-                    <td>{{ user.firstName }} {{ user.lastName }}</td>
-                    <td>{{ user.email }}</td>
-                    <td>{{ getRoleNames(user) }}</td>
-                    <td class="text-center">
-                        <span class="status-badge" [ngClass]="getUserStatus(user).toLowerCase()">
-                            {{ getUserStatus(user) }}
-                        </span>
-                    </td>
-                    <td class="actions-column">
-                        <div class="dropdown">
-                            <button class="icon-button"><lucide-icon [img]="MoreVerticalIcon" size="18"></lucide-icon></button>
-                            <div class="dropdown-content">
-                                <a href="javascript:void(0)" (click)="toggleUserStatus(user)" *hasPermission="'users:manage_status'">
-                                    <lucide-icon [img]="user.isActive ? DeactivateIcon : ActivateIcon" size="14"></lucide-icon>
-                                    {{ user.isActive ? 'Desactivar' : 'Activar' }}
-                                </a>
-                                <a href="javascript:void(0)" (click)="sendPasswordReset(user)">
-                                    <lucide-icon [img]="ResetPasswordIcon" size="14"></lucide-icon>
-                                    Restablecer Contraseña
-                                </a>
-                            </div>
-                        </div>
-                    </td>
-                </tr>
-                }
-            </tbody>
-        </table>
-    </div>
+  <div class="table-container">
+    <table>
+      <thead>
+        <tr>
+          <th>Nombre</th>
+          <th>Correo Electrónico</th>
+          <th>Rol</th>
+          <th>Estado</th>
+          <th>Acciones</th>
+        </tr>
+      </thead>
+      <tbody>
+        @for(user of users(); track user.id) {
+        <tr>
+          <td>{{ user.firstName }} {{ user.lastName }}</td>
+          <td>{{ user.email }}</td>
+          <td>{{ user.role?.name || "N/A" }}</td>
+          <td>
+            <span class="status-badge" [ngClass]="'status-' + user.status">{{
+              user.status | titlecase
+            }}</span>
+          </td>
+          <td class="actions-cell">
+            <button
+              class="button-icon"
+              (click)="toggleUserStatus(user)"
+              [title]="user.status === 'active' ? 'Desactivar' : 'Activar'"
+            >
+              <lucide-icon
+                [img]="user.status === 'active' ? DeactivateIcon : ActivateIcon"
+                size="16"
+              ></lucide-icon>
+            </button>
+            <button
+              class="button-icon"
+              (click)="sendPasswordReset(user)"
+              title="Restablecer Contraseña"
+            >
+              <lucide-icon [img]="ResetPasswordIcon" size="16"></lucide-icon>
+            </button>
+          </td>
+        </tr>
+        } @empty {
+        <tr>
+          <td colspan="5">No se encontraron usuarios.</td>
+        </tr>
+        }
+      </tbody>
+    </table>
+  </div>
 </div>
 
-@if (isModalOpen()) {
+@if(isModalOpen()) {
 <div class="modal-overlay" (click)="closeModal()">
-    <div class="modal-content" (click)="$event.stopPropagation()">
-        <div class="modal-header">
-            <h3>Invitar Nuevo Usuario</h3>
-            <button class="icon-button" (click)="closeModal()"><lucide-icon [img]="CloseIcon" size="20"></lucide-icon></button>
-        </div>
-        <form [formGroup]="inviteForm" (ngSubmit)="sendInvitation()" class="modal-body">
-            <div class="form-row">
-                <div class="form-field"><label for="firstName">Nombre*</label><input id="firstName" formControlName="firstName"></div>
-                <div class="form-field"><label for="lastName">Apellido*</label><input id="lastName" formControlName="lastName"></div>
-            </div>
-            <div class="form-field"><label for="email">Correo Electrónico*</label><input id="email" type="email" formControlName="email"></div>
-            <div class="form-field">
-                <label for="roleId">Asignar Rol*</label>
-                <select id="roleId" formControlName="roleId">
-                    <option [value]="" disabled>Selecciona un rol...</option>
-                    @for(role of roles(); track role.id) {
-                        <option [value]="role.id">{{ role.name }}</option>
-                    }
-                </select>
-            </div>
-            <div class="modal-footer">
-                <button type="button" class="secondary-button" (click)="closeModal()">Cancelar</button>
-                <button type="submit" class="primary-button" [disabled]="inviteForm.invalid">
-                    <lucide-icon [img]="SaveIcon" size="16"></lucide-icon>
-                    <span>Enviar Invitación</span>
-                </button>
-            </div>
-        </form>
-    </div>
+  <div class="modal-content" (click)="$event.stopPropagation()">
+    <h2>Invitar Nuevo Usuario</h2>
+    <form [formGroup]="inviteForm" (ngSubmit)="sendInvitation()">
+      <div class="form-field">
+        <label for="firstName">Nombre</label>
+        <input id="firstName" type="text" formControlName="firstName" />
+      </div>
+      <div class="form-field">
+        <label for="lastName">Apellido</label>
+        <input id="lastName" type="text" formControlName="lastName" />
+      </div>
+      <div class="form-field">
+        <label for="email">Correo Electrónico</label>
+        <input id="email" type="email" formControlName="email" />
+      </div>
+      <div class="form-field">
+        <label for="roleId">Rol</label>
+        <select id="roleId" formControlName="roleId">
+          <option [value]="null" disabled>Seleccione un rol...</option>
+          @for (role of roles(); track role.id) {
+          <option [value]="role.id">{{ role.name }}</option>
+          }
+        </select>
+      </div>
+      <div class="modal-actions">
+        <button type="button" class="button-secondary" (click)="closeModal()">
+          Cancelar
+        </button>
+        <button
+          type="submit"
+          class="button-primary"
+          [disabled]="inviteForm.invalid"
+        >
+          Enviar Invitación
+        </button>
+      </div>
+    </form>
+  </div>
 </div>
 }

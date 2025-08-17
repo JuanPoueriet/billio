@@ -1,20 +1,26 @@
-import { Injectable } from '@angular/core';
+import { Injectable, signal } from '@angular/core';
+
+export type NotificationType = 'success' | 'error' | 'warn' | 'info';
+
+export interface Notification {
+  message: string;
+  type: NotificationType;
+  duration?: number;
+}
 
 @Injectable({
-  providedIn: 'root'
+  providedIn: 'root',
 })
 export class NotificationService {
-  private notifications: string[] = [];
+  notifications = signal<Notification[]>([]);
 
-  showSuccess(message: string): void {
-    console.log(`SUCCESS: ${message}`);
-    // En una implementación real mostraría un toast/alert
-    alert(`✅ ${message}`);
+  show(message: string, type: NotificationType = 'info', duration: number = 4000) {
+    const newNotification = { message, type, duration };
+    this.notifications.update(current => [...current, newNotification]);
+    setTimeout(() => this.close(newNotification), duration);
   }
 
-  showError(message: string): void {
-    console.error(`ERROR: ${message}`);
-    // En una implementación real mostraría un toast/alert
-    alert(`❌ ${message}`);
+  close(notification: Notification) {
+    this.notifications.update(current => current.filter(n => n !== notification));
   }
 }

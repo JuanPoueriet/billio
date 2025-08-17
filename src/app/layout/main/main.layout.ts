@@ -19,6 +19,7 @@ import {
 } from 'lucide-angular';
 import { TranslateModule } from '@ngx-translate/core';
 import { Sidebar } from '../sidebar/sidebar';
+import { NotificationService } from '../../core/services/notification';
 
 @Component({
   selector: 'app-main-layout',
@@ -97,4 +98,7 @@ export class MainLayout {
       this.closeUserMenu();
     }
   }
+
+  notificationService = inject(NotificationService);
+  notifications = this.notificationService.notifications.asReadonly();
 }

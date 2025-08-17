@@ -485,3 +485,49 @@
 .gridster-column {
   border-color: var(--border-color) !important;
 }
+
+
+
+
+.notification-container {
+  position: fixed;
+  top: 20px;
+  right: 20px;
+  z-index: 10000;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.notification {
+  padding: 15px 20px;
+  border-radius: 8px;
+  color: #fff;
+  min-width: 300px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+  cursor: pointer;
+  transition: all 0.3s ease-in-out;
+  opacity: 0.95;
+
+  &:hover {
+    opacity: 1;
+    box-shadow: 0 6px 16px rgba(0, 0, 0, 0.2);
+  }
+
+  &-success {
+    background-color: #28a745;
+  }
+
+  &-error {
+    background-color: #dc3545;
+  }
+
+  &-warn {
+    background-color: #ffc107;
+    color: #212529;
+  }
+
+  &-info {
+    background-color: #17a2b8;
+  }
+}

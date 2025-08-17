@@ -1,36 +1,21 @@
-/**
- * Representa la estructura de un usuario en la aplicación.
- * Esta interfaz debe mantenerse alineada con la entidad `User` del backend.
- */
+// src/app/shared/interfaces/user.interface.ts
+
+import { Role } from "../../core/api/roles.service";
+
 export interface User {
-  /** Identificador único del usuario (UUID). */
   id: string;
-
-  /** Correo electrónico del usuario. */
-  email: string;
-
-  /** Nombre del usuario. */
   firstName: string;
-
-  /** Apellido del usuario. */
   lastName: string;
-
-  /** Indica si la cuenta del usuario está activa. */
+  email: string;
   isActive: boolean;
-
-  /**
-   * Lista de roles asignados al usuario.
-   * Ejemplo: ["admin", "editor"]
-   */
-  roles: string[];
-
-  /**
-   * Lista de permisos calculados del usuario.
-   * El backend los añade al payload del JWT a partir de los roles.
-   * Ejemplo: ["users.create", "users.delete"]
-   */
+  status: 'pending' | 'active' | 'inactive'; // <--- CORRECCIÓN: Añadir la propiedad 'status'
+  role?: Role; // <--- CORRECCIÓN: Definir la propiedad 'role' correctamente
+  organizationId: string;
+  roleId?: string;
+  createdAt: Date;
+  updatedAt: Date;
   permissions: string[];
+  roles: Role[]; // Asegurarse de que esta propiedad exista si se usa
+  
 
-  /** Token de acceso JWT del usuario. */
-  token: string;
 }
